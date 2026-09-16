@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { HiArrowsRightLeft } from 'react-icons/hi2';
 
 export default function BeforeAfterSlider({
@@ -10,59 +10,65 @@ export default function BeforeAfterSlider({
   finalLabel = 'GRADED REC.709',
 }) {
   const containerRef = useRef(null);
+  const clipLayerRef = useRef(null);
+  const dividerRef = useRef(null);
   const percentRef = useRef(null);
   const rawVideoRef = useRef(null);
   const finalVideoRef = useRef(null);
-  const rectRef = useRef(null);
-  const isVisibleRef = useRef(false);
 
   const stateRef = useRef({
     isDragging: false,
     resumeTimer: null,
     currentPos: 50,
     animPhase: 0,
-    isGliding: true,
+    isVisible: true,
   });
 
   const isVideoRaw = rawMedia && Boolean(rawMedia.match(/\.(mp4|webm|mov|ogg)/i));
   const isVideoFinal = finalMedia && Boolean(finalMedia.match(/\.(mp4|webm|mov|ogg)/i));
 
-  // Synchronize raw & final videos if both are video
+  // Direct 0ms hardware update without CSS variable inheritance overhead
+  const applyPosition = useCallback((pos) => {
+    const clamped = Math.max(1, Math.min(99, pos));
+    stateRef.current.currentPos = clamped;
+
+    if (clipLayerRef.current) {
+      const insetVal = `inset(0 ${(100 - clamped).toFixed(2)}% 0 0)`;
+      clipLayerRef.current.style.clipPath = insetVal;
+      clipLayerRef.current.style.webkitClipPath = insetVal;
+    }
+    if (dividerRef.current) {
+      dividerRef.current.style.left = `${clamped.toFixed(2)}%`;
+    }
+    if (percentRef.current) {
+      percentRef.current.textContent = `${Math.round(clamped)}%`;
+    }
+  }, []);
+
+  // Synchronize video playback if both are video
   const handleTimeUpdate = () => {
     if (isVideoRaw && isVideoFinal && rawVideoRef.current && finalVideoRef.current) {
-      if (Math.abs(rawVideoRef.current.currentTime - finalVideoRef.current.currentTime) > 0.2) {
+      if (Math.abs(rawVideoRef.current.currentTime - finalVideoRef.current.currentTime) > 0.25) {
         finalVideoRef.current.currentTime = rawVideoRef.current.currentTime;
       }
     }
   };
 
-  // Helper to set slider position synchronously across clip and divider with 0 layout reflows
-  const setPosition = (pos) => {
-    stateRef.current.currentPos = pos;
-    const clamped = Math.max(1, Math.min(99, pos));
-    if (containerRef.current) {
-      containerRef.current.style.setProperty('--slider-pos', `${clamped.toFixed(2)}%`);
-    }
-    if (percentRef.current) {
-      percentRef.current.textContent = `${Math.round(clamped)}%`;
-    }
-  };
-
-  // Viewport-aware auto-glider animation loop (runs ONLY when on-screen and idle)
+  // Viewport observer & continuous auto-glider
   useEffect(() => {
     let animId;
     let lastTime = performance.now();
-    const cycleDuration = 7000; // 7s smooth sweep
+    const cycleDuration = 6500; // 6.5s smooth cinematic sweep
     const state = stateRef.current;
 
     const animate = (now) => {
       const dt = now - lastTime;
       lastTime = now;
 
-      if (isVisibleRef.current && state.isGliding && !state.isDragging) {
+      if (state.isVisible && !state.isDragging) {
         state.animPhase += (dt / cycleDuration) * Math.PI * 2;
         const pos = 50 + 35 * Math.sin(state.animPhase);
-        setPosition(pos);
+        applyPosition(pos);
       }
 
       animId = requestAnimationFrame(animate);
@@ -70,12 +76,12 @@ export default function BeforeAfterSlider({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        isVisibleRef.current = entry.isIntersecting;
+        state.isVisible = entry.isIntersecting;
         if (entry.isIntersecting) {
           lastTime = performance.now();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.05 }
     );
 
     if (containerRef.current) {
@@ -91,83 +97,59 @@ export default function BeforeAfterSlider({
         clearTimeout(state.resumeTimer);
       }
     };
-  }, []);
+  }, [applyPosition]);
 
-  // Zero-reflow pointer update (uses cached bounding rect from pointerdown)
-  const updatePosFromClientX = (clientX) => {
-    const rect = rectRef.current;
-    if (!rect || rect.width <= 0) return;
-    const offsetX = Math.max(0, Math.min(clientX - rect.left, rect.width));
-    const rawPercent = (offsetX / rect.width) * 100;
-    setPosition(rawPercent);
-
-    // Keep glider phase in sync so it resumes without jumping
-    const norm = Math.max(-1, Math.min(1, (rawPercent - 50) / 35));
-    stateRef.current.animPhase = Math.asin(norm);
-  };
-
+  // Pointer tracking attached to window to guarantee zero lost clicks/moves
   const handlePointerDown = (e) => {
+    e.preventDefault();
     if (!containerRef.current) return;
-    // Cache bounding rect ONCE at start of gesture to eliminate forced reflows during move
-    rectRef.current = containerRef.current.getBoundingClientRect();
-    stateRef.current.isDragging = true;
-    stateRef.current.isGliding = false;
 
+    const rect = containerRef.current.getBoundingClientRect();
+    if (rect.width <= 0) return;
+
+    stateRef.current.isDragging = true;
     if (stateRef.current.resumeTimer) {
       clearTimeout(stateRef.current.resumeTimer);
       stateRef.current.resumeTimer = null;
     }
 
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // ignore
-    }
+    const updateFromClientX = (clientX) => {
+      const offsetX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+      const percent = (offsetX / rect.width) * 100;
+      applyPosition(percent);
 
-    const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
-    updatePosFromClientX(clientX);
-  };
+      // Keep auto-glider phase in lockstep with user's position
+      const norm = Math.max(-1, Math.min(1, (percent - 50) / 35));
+      stateRef.current.animPhase = Math.asin(norm);
+    };
 
-  const handlePointerMove = (e) => {
-    if (!stateRef.current.isDragging) return;
-    const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
-    updatePosFromClientX(clientX);
-  };
+    updateFromClientX(e.clientX);
 
-  const handlePointerUp = (e) => {
-    if (!stateRef.current.isDragging) return;
-    stateRef.current.isDragging = false;
-    rectRef.current = null;
+    const onPointerMove = (moveEvent) => {
+      moveEvent.preventDefault();
+      updateFromClientX(moveEvent.clientX);
+    };
 
-    try {
-      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      }
-    } catch {
-      // ignore
-    }
+    const onPointerUp = () => {
+      stateRef.current.isDragging = false;
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
 
-    // Resume subtle glide after 3s of idle
-    stateRef.current.resumeTimer = setTimeout(() => {
-      stateRef.current.isGliding = true;
-    }, 3000);
-  };
-
-  const handleMouseEnter = () => {
-    stateRef.current.isGliding = false;
-  };
-
-  const handleMouseLeave = () => {
-    if (!stateRef.current.isDragging) {
+      // Resume auto-glide after 2.5s of inactivity
       stateRef.current.resumeTimer = setTimeout(() => {
-        stateRef.current.isGliding = true;
-      }, 2000);
-    }
+        stateRef.current.isDragging = false;
+      }, 2500);
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: false });
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
   };
 
   return (
-    <div className="w-full">
-      {/* Title & Live Status Cue */}
+    <div className="w-full select-none">
+      {/* Title & Live Status Indicator */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-4 gap-3">
         <div>
           <h3 className="text-xl sm:text-2xl font-display font-bold text-text-primary tracking-tight">
@@ -179,28 +161,20 @@ export default function BeforeAfterSlider({
             </p>
           )}
         </div>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-accent/40 text-[11px] font-mono text-accent shrink-0 select-none">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-accent/40 text-[11px] font-mono text-accent shrink-0">
           <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-          <span>LIVE WIPE // DRAG OR GLIDE</span>
+          <span>DRAG OR AUTOPLAY</span>
         </div>
       </div>
 
-      {/* Main Visual Comparison Frame (Interactive Drag + Zero-Lag Synced Inset Clip) */}
+      {/* Main Interactive Comparison Viewport */}
       <div
         ref={containerRef}
         onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        style={{
-          '--slider-pos': '50%',
-          touchAction: 'none',
-        }}
-        className="relative w-full aspect-video rounded-2xl overflow-hidden select-none bg-surface-card border border-border shadow-2xl cursor-ew-resize group"
+        style={{ touchAction: 'none' }}
+        className="relative w-full aspect-video rounded-2xl overflow-hidden bg-surface-card border border-border shadow-2xl cursor-ew-resize group"
       >
-        {/* Final / Graded Layer (Base Layer) */}
+        {/* Base Layer: Final Graded Cut */}
         <div className="absolute inset-0 w-full h-full pointer-events-none">
           {finalMedia ? (
             isVideoFinal ? (
@@ -211,6 +185,7 @@ export default function BeforeAfterSlider({
                 muted
                 loop
                 playsInline
+                draggable={false}
                 style={{ transform: 'translateZ(0)' }}
                 className="w-full h-full object-cover"
               />
@@ -218,12 +193,18 @@ export default function BeforeAfterSlider({
               <img
                 src={finalMedia}
                 alt="Final graded cut"
-                style={{ transform: 'translateZ(0)' }}
-                className="w-full h-full object-cover"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                style={{
+                  transform: 'translateZ(0)',
+                  userSelect: 'none',
+                  WebkitUserDrag: 'none',
+                }}
+                className="w-full h-full object-cover pointer-events-none"
               />
             )
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-amber-950/40 via-cyan-950/30 to-surface-card flex items-center justify-center p-8">
+            <div className="w-full h-full bg-gradient-to-br from-amber-950/40 via-cyan-950/30 to-surface-card flex items-center justify-center p-8 pointer-events-none">
               <div className="text-center">
                 <div className="w-16 h-16 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center mx-auto mb-3">
                   <span className="font-display font-black text-accent text-xl">4K</span>
@@ -234,7 +215,7 @@ export default function BeforeAfterSlider({
             </div>
           )}
 
-          {/* Graded Badge */}
+          {/* Graded Label Badge */}
           <div className="absolute bottom-4 right-4 z-10 pointer-events-none">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium glass-card border border-accent/40 text-accent shadow-lg">
               <span className="w-1.5 h-1.5 rounded-full bg-accent" />
@@ -243,12 +224,13 @@ export default function BeforeAfterSlider({
           </div>
         </div>
 
-        {/* Raw Layer (Clipped overlay on the left, driven in lockstep via CSS variable) */}
+        {/* Top Clipped Layer: Raw Log Footage */}
         <div
+          ref={clipLayerRef}
           className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none will-change-[clip-path]"
           style={{
-            clipPath: 'inset(0 calc(100% - var(--slider-pos, 50%)) 0 0)',
-            WebkitClipPath: 'inset(0 calc(100% - var(--slider-pos, 50%)) 0 0)',
+            clipPath: 'inset(0 50% 0 0)',
+            WebkitClipPath: 'inset(0 50% 0 0)',
           }}
         >
           {rawMedia ? (
@@ -260,6 +242,7 @@ export default function BeforeAfterSlider({
                 muted
                 loop
                 playsInline
+                draggable={false}
                 onTimeUpdate={handleTimeUpdate}
                 style={{ transform: 'translateZ(0)' }}
                 className="w-full h-full object-cover filter contrast-75 brightness-110 saturate-50"
@@ -268,12 +251,18 @@ export default function BeforeAfterSlider({
               <img
                 src={rawMedia}
                 alt="Raw log footage"
-                style={{ transform: 'translateZ(0)' }}
-                className="w-full h-full object-cover filter contrast-75 brightness-110 saturate-50"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                style={{
+                  transform: 'translateZ(0)',
+                  userSelect: 'none',
+                  WebkitUserDrag: 'none',
+                }}
+                className="w-full h-full object-cover filter contrast-75 brightness-110 saturate-50 pointer-events-none"
               />
             )
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-neutral-900 to-zinc-950 flex items-center justify-center p-8">
+            <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-neutral-900 to-zinc-950 flex items-center justify-center p-8 pointer-events-none">
               <div className="text-center opacity-70">
                 <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mx-auto mb-3">
                   <span className="font-display font-bold text-white text-xl">LOG</span>
@@ -284,7 +273,7 @@ export default function BeforeAfterSlider({
             </div>
           )}
 
-          {/* Raw Badge */}
+          {/* Raw Label Badge */}
           <div className="absolute bottom-4 left-4 z-10 pointer-events-none">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium glass-card border border-white/25 text-white shadow-lg">
               <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
@@ -293,15 +282,16 @@ export default function BeforeAfterSlider({
           </div>
         </div>
 
-        {/* Glider Divider Beam & Centered Pill (Always driven 100% in lockstep by --slider-pos) */}
+        {/* Vertical Wipe Divider Line & Handle */}
         <div
+          ref={dividerRef}
           className="absolute top-0 bottom-0 z-20 pointer-events-none will-change-[left]"
-          style={{ left: 'var(--slider-pos, 50%)' }}
+          style={{ left: '50%' }}
         >
-          {/* Vertical beam line with cinema glow */}
+          {/* Cinema Glow Wipe Beam */}
           <div className="absolute top-0 bottom-0 -left-px w-0.5 bg-gradient-to-b from-transparent via-white to-transparent shadow-[0_0_12px_rgba(255,255,255,0.9)]" />
 
-          {/* Glider Status Pill */}
+          {/* Center Pill / Percentage Readout */}
           <div className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 px-3 py-1.5 rounded-full glass border border-accent/60 flex items-center gap-1.5 shadow-2xl bg-surface/90 text-text-primary backdrop-blur-md group-hover:scale-105 transition-transform">
             <HiArrowsRightLeft className="w-3.5 h-3.5 text-accent animate-pulse" />
             <span
