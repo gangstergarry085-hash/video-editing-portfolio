@@ -1,0 +1,27 @@
+import { LocalAdapter } from './LocalAdapter.js';
+import { CloudinaryAdapter } from './CloudinaryAdapter.js';
+
+let storageInstance = null;
+
+/**
+ * Factory: returns the configured storage adapter.
+ * Reads STORAGE_PROVIDER from env. Defaults to 'local'.
+ */
+export function getStorage() {
+  if (storageInstance) return storageInstance;
+
+  const provider = (process.env.STORAGE_PROVIDER || 'local').toLowerCase();
+
+  switch (provider) {
+    case 'cloudinary':
+      storageInstance = new CloudinaryAdapter();
+      break;
+    case 'local':
+    default:
+      storageInstance = new LocalAdapter();
+      break;
+  }
+
+  console.log(`Storage provider: ${provider}`);
+  return storageInstance;
+}

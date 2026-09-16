@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build outputs
+dist/
+client/dist/
+dist-ssr/
+*.local
+
+# Netlify local artifacts
+.netlify/
+
+# Environment & Secret files
+.env
+.env.*
+!.env.example
+*.env
+server/.env
+server/.env.*
+!server/.env.example
+client/.env
+client/.env.*
+!client/.env.example
+*.pem
+*.key
+*.cert
+
+# Media Uploads (keep directory structure via .gitkeep)
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Local databases & caches
+.pglite_data/
+server/.pglite_data/
+*.sqlite
+*.db
+.cache/
+.turbo/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
