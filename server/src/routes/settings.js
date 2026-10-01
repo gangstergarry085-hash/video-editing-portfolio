@@ -48,6 +48,9 @@ router.put('/', requireAuth, validate(settingsSchema), async (req, res, next) =>
   try {
     const data = req.body;
 
+    const socialLinks = typeof data.socialLinks === 'string' ? data.socialLinks : JSON.stringify(data.socialLinks || {});
+    const processSteps = typeof data.processSteps === 'string' ? data.processSteps : JSON.stringify(data.processSteps || []);
+
     const { rows: existing } = await pool.query('SELECT id FROM settings LIMIT 1');
 
     let result;
@@ -64,9 +67,9 @@ router.put('/', requireAuth, validate(settingsSchema), async (req, res, next) =>
       `, [
         data.siteTitle, data.heroHeading, data.heroSubheading,
         data.heroStatement, data.availabilityStatus, data.accentColor,
-        data.email, JSON.stringify(data.socialLinks), data.footerText,
+        data.email, socialLinks, data.footerText,
         data.metaTitle, data.metaDescription, data.ogImageUrl,
-        JSON.stringify(data.processSteps),
+        processSteps,
         data.contactHeading || 'Ready to Cut Your Next Masterpiece?',
         data.contactSubheading || "Whether you need a dynamic commercial campaign, a high-converting short-form reel, or a nuanced color grade — let's collaborate.",
         existing[0].id,
@@ -82,9 +85,9 @@ router.put('/', requireAuth, validate(settingsSchema), async (req, res, next) =>
       `, [
         data.siteTitle, data.heroHeading, data.heroSubheading,
         data.heroStatement, data.availabilityStatus, data.accentColor,
-        data.email, JSON.stringify(data.socialLinks), data.footerText,
+        data.email, socialLinks, data.footerText,
         data.metaTitle, data.metaDescription, data.ogImageUrl,
-        JSON.stringify(data.processSteps),
+        processSteps,
         data.contactHeading || 'Ready to Cut Your Next Masterpiece?',
         data.contactSubheading || "Whether you need a dynamic commercial campaign, a high-converting short-form reel, or a nuanced color grade — let's collaborate.",
       ]);

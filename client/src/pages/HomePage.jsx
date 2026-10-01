@@ -9,6 +9,7 @@ import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import TiltCard from '../components/TiltCard';
 import AudioVisualizer from '../components/AudioVisualizer';
 import FilmStripTicker from '../components/FilmStripTicker';
+import VideoPlayer from '../components/VideoPlayer';
 import {
   HiPlay,
   HiOutlineArrowRight,
@@ -257,7 +258,7 @@ export default function HomePage() {
       ? projectsToDisplay
       : projectsToDisplay.filter((p) => p.category === activeCategory);
 
-  const categories = ['All', 'Client Work', 'Personal Experiment'];
+  const categories = ['All', ...new Set(projectsToDisplay.map((p) => p.category).filter(Boolean))];
 
   // Scroll parallax for Hero
   const { scrollYProgress } = useScroll();
@@ -435,11 +436,10 @@ export default function HomePage() {
           <TiltCard className="rounded-3xl overflow-hidden glass-card p-3 shadow-2xl border border-border group">
             <div className="relative rounded-2xl overflow-hidden aspect-video bg-surface-card glow">
               {showreel?.video_url ? (
-                <video
-                  src={showreel.video_url}
+                <VideoPlayer
+                  url={showreel.video_url}
                   poster={showreel.thumbnail_url}
-                  controls
-                  playsInline
+                  title={showreel.title || 'Dev Anand Showreel'}
                   className="w-full h-full object-cover"
                 />
               ) : (

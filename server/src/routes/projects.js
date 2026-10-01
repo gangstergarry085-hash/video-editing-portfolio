@@ -18,7 +18,7 @@ const projectSchema = Joi.object({
   category: Joi.string().valid(...CATEGORIES).required(),
   description: Joi.string().allow('', null),
   shortDescription: Joi.string().max(500).allow('', null),
-  videoUrl: Joi.string().uri().allow('', null),
+  videoUrl: Joi.string().allow('', null),
   thumbnailUrl: Joi.string().allow('', null),
   mobileVideoUrl: Joi.string().allow('', null),
   tools: Joi.array().items(Joi.string()).default([]),

@@ -234,6 +234,9 @@ The Vite dev server proxies `/api` requests to `localhost:5000`, so everything w
 
 ### Changing Admin Credentials
 
+You can change your admin password in two ways:
+1. **Via Admin Panel UI:** Navigate to `/admin/settings` → **Admin Security & Password** section, enter your current password and your new password.
+2. **Via Command Line:**
 ```bash
 # Update server/.env then re-run seed:admin
 ADMIN_EMAIL=new@email.com ADMIN_PASSWORD=new-strong-password npm run seed:admin --prefix server
@@ -242,12 +245,62 @@ ADMIN_EMAIL=new@email.com ADMIN_PASSWORD=new-strong-password npm run seed:admin 
 ## Security
 
 - Passwords hashed with bcrypt (12 rounds)
+- In-app password rotation endpoint (`PUT /api/auth/password`) with current password verification
 - HTTP-only secure session cookies
 - Auth middleware on all admin routes
 - Server-side input validation with Joi
 - File type/size limits on upload (500MB max)
-- CORS locked to configured origins
+- CORS locked to configured origins with defensive hostname parsing
 - Rate limiting on login (5 attempts / 15 min)
 - Helmet security headers
 - No secrets in the client bundle
+
+---
+
+## 🚀 Hosting on GitHub Pages (100% Free)
+
+This repository includes a pre-configured GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) to automatically build and deploy your React frontend to **GitHub Pages** completely for free.
+
+### Step 1: Create a GitHub Repository & Push
+Run the included PowerShell helper script or execute these commands:
+```powershell
+# Automated helper:
+.\deploy-to-github.ps1
+```
+Or manually:
+```bash
+git branch -M main
+git remote add origin https://github.com/<your-username>/<your-repo-name>.git
+git push -u origin main
+```
+
+### Step 2: Enable GitHub Pages
+1. Go to your repository on GitHub.
+2. Navigate to **Settings** → **Pages**.
+3. Under **Build and deployment** → **Source**, select **GitHub Actions**.
+4. The deployment workflow will trigger automatically whenever you push to `main`!
+
+### Step 3: Configure Production API (Optional Backend)
+In your repository's **Settings** → **Secrets and variables** → **Actions**, add:
+- `VITE_API_URL`: Your backend API URL (e.g. `https://your-backend.onrender.com/api` or `https://your-site.netlify.app/.netlify/functions/api`)
+
+---
+
+## ⚡ Using GitHub as a Free CDN for Videos & Media
+
+Never pay for video or image hosting. You can host up to 2GB videos and fast global assets for free using GitHub:
+
+1. **Large Videos (up to 2 GB per video)**:
+   - Go to your repository → **Releases** → **Draft a new release**.
+   - Create tag `v1.0.0-media` and attach your `.mp4`/`.webm`/`.mov` files.
+   - Click **Publish release**.
+   - Copy the direct asset link: `https://github.com/<user>/<repo>/releases/download/v1.0.0-media/<filename>.mp4`
+   - Paste directly into your Admin Panel for Showreel or Projects! The universal player streams it instantly with HTTP range request support.
+
+2. **High-Res Images via jsDelivr CDN**:
+   - Place images in the [`media/`](file:///c:/Users/USER/Projects/video%20editing%20portfolio/media) folder and push to GitHub.
+   - Use the high-speed jsDelivr CDN URL:
+     `https://cdn.jsdelivr.net/gh/<user>/<repo>@main/media/<filename>.jpg`
+
+
 

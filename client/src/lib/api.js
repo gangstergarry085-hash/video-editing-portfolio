@@ -14,6 +14,8 @@ export const authAPI = {
   login: (email, password) => api.post('/auth/login', { email, password }),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
+  changePassword: (currentPassword, newPassword) =>
+    api.put('/auth/password', { currentPassword, newPassword }),
 };
 
 // ── Projects ──────────────────────────────────────────────

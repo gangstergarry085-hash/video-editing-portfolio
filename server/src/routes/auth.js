@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import Joi from 'joi';
 import pool from '../config/db.js';
+import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { createError } from '../middleware/errorHandler.js';
 
@@ -65,6 +66,43 @@ router.post('/logout', (req, res, next) => {
     res.clearCookie('connect.sid');
     res.json({ message: 'Logged out' });
   });
+});
+
+const passwordChangeSchema = Joi.object({
+  currentPassword: Joi.string().min(1).required(),
+  newPassword: Joi.string().min(8).max(128).required(),
+});
+
+// PUT /api/auth/password — change password (admin)
+router.put('/password', requireAuth, validate(passwordChangeSchema), async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.session.userId;
+
+    const { rows } = await pool.query(
+      'SELECT id, password_hash FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      return next(createError(404, 'User not found'));
+    }
+
+    const match = await bcrypt.compare(currentPassword, rows[0].password_hash);
+    if (!match) {
+      return next(createError(400, 'Current password is incorrect'));
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 12);
+    await pool.query(
+      'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+      [newHash, userId]
+    );
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // GET /api/auth/me

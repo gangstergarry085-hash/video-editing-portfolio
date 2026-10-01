@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { projectsAPI, mediaAPI } from '../lib/api';
 import toast from 'react-hot-toast';
+import VideoPlayer from '../components/VideoPlayer';
 import {
   HiOutlineArrowLeft, HiOutlineUpload, HiOutlineX,
-  HiOutlineFilm,
+  HiOutlineLink,
 } from 'react-icons/hi';
 
 const CATEGORIES = [
@@ -33,31 +34,37 @@ const emptyForm = {
 
 function MediaField({ label, field, accept, type = 'video', value, isUploading, uploadPercent, onChange, onUpload }) {
   return (
-    <div>
+    <div className="space-y-2">
       <label className="admin-label">{label}</label>
-      {value ? (
-        <div className="relative admin-card p-3">
-          <div className="flex items-center gap-3">
-            {type === 'image' ? (
-              <img src={value} alt="" className="w-16 h-12 rounded object-cover" />
-            ) : (
-              <div className="w-16 h-12 rounded bg-surface flex items-center justify-center">
-                <HiOutlineFilm className="w-6 h-6 text-text-muted" />
-              </div>
-            )}
-            <p className="text-xs text-text-muted truncate flex-1">{value}</p>
-            <button
-              type="button"
-              onClick={() => onChange(field, '')}
-              className="p-1 rounded hover:bg-surface-hover text-text-muted cursor-pointer"
-            >
-              <HiOutlineX className="w-4 h-4" />
-            </button>
-          </div>
+
+      {/* Paste URL Input */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <HiOutlineLink className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+          <input
+            type="text"
+            value={value || ''}
+            onChange={(e) => onChange(field, e.target.value)}
+            placeholder={type === 'video' ? 'Paste YouTube, Vimeo, or direct MP4 URL' : 'Paste image URL (https://...)'}
+            className="admin-input pl-10 text-xs"
+          />
         </div>
-      ) : isUploading ? (
-        <div className="admin-card p-4">
-          <div className="w-full bg-surface rounded-full h-2 mb-2">
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange(field, '')}
+            className="admin-btn-secondary px-3"
+            title="Clear"
+          >
+            <HiOutlineX className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      {/* File Upload Zone */}
+      {isUploading ? (
+        <div className="admin-card p-3">
+          <div className="w-full bg-surface rounded-full h-2 mb-1.5">
             <div
               className="bg-accent h-2 rounded-full transition-all duration-300"
               style={{ width: `${uploadPercent}%` }}
@@ -66,10 +73,9 @@ function MediaField({ label, field, accept, type = 'video', value, isUploading, 
           <p className="text-xs text-text-muted text-center">{uploadPercent}% uploading...</p>
         </div>
       ) : (
-        <label className="admin-card p-6 flex flex-col items-center gap-2 cursor-pointer hover:border-accent/30 transition-colors">
-          <HiOutlineUpload className="w-8 h-8 text-text-muted" />
-          <span className="text-sm text-text-secondary">Click to upload or drag & drop</span>
-          <span className="text-xs text-text-muted">{accept}</span>
+        <label className="admin-card p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-accent/40 transition-colors">
+          <HiOutlineUpload className="w-4 h-4 text-accent" />
+          <span className="text-xs text-text-secondary">Or choose {type === 'video' ? 'video file' : 'image'} to upload</span>
           <input
             type="file"
             accept={accept}
@@ -77,6 +83,19 @@ function MediaField({ label, field, accept, type = 'video', value, isUploading, 
             onChange={(e) => e.target.files?.[0] && onUpload(field, e.target.files[0])}
           />
         </label>
+      )}
+
+      {/* Live Preview if value provided */}
+      {value && (
+        <div className="mt-2 rounded-xl overflow-hidden bg-surface border border-border max-w-sm">
+          {type === 'image' ? (
+            <img src={value} alt="" className="w-full h-32 object-cover" />
+          ) : (
+            <div className="aspect-video">
+              <VideoPlayer url={value} className="w-full h-full object-cover" />
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -119,15 +138,15 @@ export default function ProjectFormPage() {
         videoUrl: project.video_url || '',
         thumbnailUrl: project.thumbnail_url || '',
         mobileVideoUrl: project.mobile_video_url || '',
-        tools: project.tools || [],
+        tools: Array.isArray(project.tools) ? project.tools : [],
         clientName: project.client_name || '',
         clientDescription: project.client_description || '',
         devRole: project.dev_role || '',
-        servicesProvided: project.services_provided || [],
+        servicesProvided: Array.isArray(project.services_provided) ? project.services_provided : [],
         projectYear: project.project_year || new Date().getFullYear(),
         projectType: project.project_type || '',
-        featured: project.featured || false,
-        published: project.published || false,
+        featured: Boolean(project.featured),
+        published: Boolean(project.published),
       });
     } catch {
       toast.error('Failed to load project');
@@ -175,7 +194,7 @@ export default function ProjectFormPage() {
         setUploading((prev) => ({ ...prev, [field]: progress }));
       });
       handleChange(field, data.url);
-      toast.success('File uploaded');
+      toast.success('File uploaded successfully');
     } catch {
       toast.error('Upload failed');
     } finally {
@@ -189,7 +208,7 @@ export default function ProjectFormPage() {
 
   async function handleSubmit(asPublished) {
     if (!form.title.trim()) {
-      toast.error('Title is required');
+      toast.error('Project title is required');
       return;
     }
 
@@ -223,12 +242,12 @@ export default function ProjectFormPage() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-3xl space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/admin/projects')}
-          className="p-2 rounded-lg hover:bg-surface-hover text-text-muted transition-colors"
+          className="p-2 rounded-lg hover:bg-surface-hover text-text-muted transition-colors cursor-pointer"
         >
           <HiOutlineArrowLeft className="w-5 h-5" />
         </button>
@@ -237,67 +256,70 @@ export default function ProjectFormPage() {
             {isEdit ? 'Edit Project' : 'New Project'}
           </h1>
           <p className="text-text-muted text-sm mt-0.5">
-            {isEdit ? 'Update project details' : 'Add a new project to your portfolio'}
+            {isEdit ? 'Update project video, metadata, and tools' : 'Add a new project to your master portfolio'}
           </p>
         </div>
       </div>
 
       <div className="space-y-6">
         {/* Title & Category */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="admin-card space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="admin-label">Title *</label>
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => handleChange('title', e.target.value)}
+                placeholder="e.g. Star Excellent Academy Commercial"
+                required
+                className="admin-input"
+              />
+            </div>
+            <div>
+              <label className="admin-label">Category *</label>
+              <select
+                value={form.category}
+                onChange={(e) => handleChange('category', e.target.value)}
+                className="admin-input cursor-pointer"
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div>
-            <label className="admin-label">Title *</label>
+            <label className="admin-label">Short Tagline Description</label>
             <input
               type="text"
-              value={form.title}
-              onChange={(e) => handleChange('title', e.target.value)}
-              placeholder="Project title"
+              value={form.shortDescription}
+              onChange={(e) => handleChange('shortDescription', e.target.value)}
+              placeholder="High-energy commercial edit with kinetic typography and dynamic speed ramping."
+              maxLength={500}
               className="admin-input"
             />
           </div>
+
           <div>
-            <label className="admin-label">Category *</label>
-            <select
-              value={form.category}
-              onChange={(e) => handleChange('category', e.target.value)}
-              className="admin-input"
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+            <label className="admin-label">Full Narrative Description</label>
+            <textarea
+              value={form.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              placeholder="Detailed breakdown of creative brief, editing techniques, pacing, and color science..."
+              rows={4}
+              className="admin-input resize-y"
+            />
           </div>
         </div>
 
-        {/* Description */}
-        <div>
-          <label className="admin-label">Description</label>
-          <textarea
-            value={form.description}
-            onChange={(e) => handleChange('description', e.target.value)}
-            placeholder="Full project description..."
-            rows={4}
-            className="admin-input resize-y"
-          />
-        </div>
+        {/* Media uploads & URLs */}
+        <div className="admin-card space-y-5">
+          <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Video & Imagery Media</h3>
 
-        <div>
-          <label className="admin-label">Short Description</label>
-          <input
-            type="text"
-            value={form.shortDescription}
-            onChange={(e) => handleChange('shortDescription', e.target.value)}
-            placeholder="One-line summary"
-            maxLength={500}
-            className="admin-input"
-          />
-        </div>
-
-        {/* Media uploads */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Media</h3>
           <MediaField
-            label="Video"
+            label="Main Project Video (16:9 Landscape)"
             field="videoUrl"
             accept="video/mp4,video/webm,video/quicktime"
             type="video"
@@ -307,8 +329,9 @@ export default function ProjectFormPage() {
             onChange={handleChange}
             onUpload={handleFileUpload}
           />
+
           <MediaField
-            label="Thumbnail"
+            label="Thumbnail / Poster Image"
             field="thumbnailUrl"
             accept="image/*"
             type="image"
@@ -318,8 +341,9 @@ export default function ProjectFormPage() {
             onChange={handleChange}
             onUpload={handleFileUpload}
           />
+
           <MediaField
-            label="Mobile Video (9:16)"
+            label="Vertical Reel / Mobile Cut (9:16 Portrait - Optional)"
             field="mobileVideoUrl"
             accept="video/mp4,video/webm"
             type="video"
@@ -331,120 +355,128 @@ export default function ProjectFormPage() {
           />
         </div>
 
-        {/* Project details */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="admin-label">Project Year</label>
-            <input
-              type="number"
-              value={form.projectYear}
-              onChange={(e) => handleChange('projectYear', parseInt(e.target.value) || '')}
-              className="admin-input"
-            />
-          </div>
-          <div>
-            <label className="admin-label">Project Type</label>
-            <input
-              type="text"
-              value={form.projectType}
-              onChange={(e) => handleChange('projectType', e.target.value)}
-              placeholder="e.g. Promotional Video"
-              className="admin-input"
-            />
-          </div>
-        </div>
+        {/* Technical specs & client details */}
+        <div className="admin-card space-y-4">
+          <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Production & Client Details</h3>
 
-        {/* Tools */}
-        <div>
-          <label className="admin-label">Tools</label>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              value={toolInput}
-              onChange={(e) => setToolInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTool())}
-              placeholder="Add a tool (press Enter)"
-              className="admin-input flex-1"
-            />
-            <button onClick={addTool} className="admin-btn-secondary">Add</button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {form.tools.map((tool) => (
-              <span key={tool} className="badge bg-surface-hover text-text-secondary flex items-center gap-1">
-                {tool}
-                <button onClick={() => removeTool(tool)} className="hover:text-danger">
-                  <HiOutlineX className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Client Work fields */}
-        {form.category === 'Client Work' && (
-          <div className="space-y-4 p-4 rounded-xl border border-border bg-surface-elevated/50">
-            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Client Details</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="admin-label">Client Name</label>
-                <input
-                  type="text"
-                  value={form.clientName}
-                  onChange={(e) => handleChange('clientName', e.target.value)}
-                  placeholder="Client name"
-                  className="admin-input"
-                />
-              </div>
-              <div>
-                <label className="admin-label">Your Role</label>
-                <input
-                  type="text"
-                  value={form.devRole}
-                  onChange={(e) => handleChange('devRole', e.target.value)}
-                  placeholder="e.g. Video Editor"
-                  className="admin-input"
-                />
-              </div>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="admin-label">Client Description</label>
-              <textarea
-                value={form.clientDescription}
-                onChange={(e) => handleChange('clientDescription', e.target.value)}
-                placeholder="About the client..."
-                rows={2}
-                className="admin-input resize-y"
+              <label className="admin-label">Production Year</label>
+              <input
+                type="number"
+                value={form.projectYear}
+                onChange={(e) => handleChange('projectYear', parseInt(e.target.value) || '')}
+                min={2000}
+                max={2100}
+                className="admin-input"
               />
             </div>
             <div>
-              <label className="admin-label">Services Provided</label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  value={serviceInput}
-                  onChange={(e) => setServiceInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
-                  placeholder="Add a service (press Enter)"
-                  className="admin-input flex-1"
-                />
-                <button onClick={addService} className="admin-btn-secondary">Add</button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {form.servicesProvided.map((svc) => (
-                  <span key={svc} className="badge bg-surface-hover text-text-secondary flex items-center gap-1">
-                    {svc}
-                    <button onClick={() => removeService(svc)} className="hover:text-danger">
-                      <HiOutlineX className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
+              <label className="admin-label">Project Format / Type</label>
+              <input
+                type="text"
+                value={form.projectType}
+                onChange={(e) => handleChange('projectType', e.target.value)}
+                placeholder="e.g. Commercial Ad, Music Video, Short Film"
+                className="admin-input"
+              />
             </div>
           </div>
-        )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="admin-label">Client Name</label>
+              <input
+                type="text"
+                value={form.clientName}
+                onChange={(e) => handleChange('clientName', e.target.value)}
+                placeholder="e.g. Star Excellent Academy"
+                className="admin-input"
+              />
+            </div>
+            <div>
+              <label className="admin-label">Your Role on Timeline</label>
+              <input
+                type="text"
+                value={form.devRole}
+                onChange={(e) => handleChange('devRole', e.target.value)}
+                placeholder="e.g. Lead Video Editor & Colorist"
+                className="admin-input"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="admin-label">About the Client / Engagement</label>
+            <textarea
+              value={form.clientDescription}
+              onChange={(e) => handleChange('clientDescription', e.target.value)}
+              placeholder="Brief summary of client and creative objective..."
+              rows={2}
+              className="admin-input resize-y"
+            />
+          </div>
+        </div>
+
+        {/* Tools and Services */}
+        <div className="admin-card space-y-5">
+          <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Software Stack & Services</h3>
+
+          {/* Tools */}
+          <div>
+            <label className="admin-label">Software Tools Used</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={toolInput}
+                onChange={(e) => setToolInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTool())}
+                placeholder="Type tool name (e.g. DaVinci Resolve) and press Enter"
+                className="admin-input flex-1"
+              />
+              <button type="button" onClick={addTool} className="admin-btn-secondary">Add</button>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {form.tools.map((tool) => (
+                <span key={tool} className="badge bg-surface border border-border text-text-secondary flex items-center gap-1.5 py-1 px-3">
+                  {tool}
+                  <button type="button" onClick={() => removeTool(tool)} className="hover:text-danger cursor-pointer">
+                    <HiOutlineX className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Services Provided */}
+          <div>
+            <label className="admin-label">Services Provided</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={serviceInput}
+                onChange={(e) => setServiceInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
+                placeholder="Type service (e.g. Color Grading) and press Enter"
+                className="admin-input flex-1"
+              />
+              <button type="button" onClick={addService} className="admin-btn-secondary">Add</button>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {form.servicesProvided.map((svc) => (
+                <span key={svc} className="badge bg-surface border border-border text-text-secondary flex items-center gap-1.5 py-1 px-3">
+                  {svc}
+                  <button type="button" onClick={() => removeService(svc)} className="hover:text-danger cursor-pointer">
+                    <HiOutlineX className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* Toggles */}
-        <div className="flex items-center gap-6">
+        <div className="admin-card flex items-center justify-between">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -452,25 +484,27 @@ export default function ProjectFormPage() {
               onChange={(e) => handleChange('featured', e.target.checked)}
               className="w-4 h-4 rounded border-border text-accent focus:ring-accent"
             />
-            <span className="text-sm text-text-secondary">Featured project</span>
+            <span className="text-sm text-text-primary font-medium">Feature prominently on Homepage Hero</span>
           </label>
         </div>
 
         {/* Submit */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <button
+            type="button"
             onClick={() => handleSubmit(false)}
             disabled={saving}
-            className="admin-btn-secondary flex-1"
+            className="admin-btn-secondary flex-1 py-3 text-sm font-semibold"
           >
             {saving ? 'Saving...' : 'Save as Draft'}
           </button>
           <button
+            type="button"
             onClick={() => handleSubmit(true)}
             disabled={saving}
-            className="admin-btn-primary flex-1"
+            className="admin-btn-primary flex-1 py-3 text-sm font-semibold"
           >
-            {saving ? 'Publishing...' : isEdit ? 'Update & Publish' : 'Publish'}
+            {saving ? 'Publishing...' : isEdit ? 'Update & Publish' : 'Publish to Portfolio'}
           </button>
         </div>
       </div>

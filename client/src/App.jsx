@@ -45,7 +45,7 @@ function App() {
   }, []);
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <ScrollToTop />
         <Suspense fallback={<RouteLoader />}>
           <Routes>

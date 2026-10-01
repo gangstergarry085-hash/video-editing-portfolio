@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { projectsAPI } from '../lib/api';
+import VideoPlayer from '../components/VideoPlayer';
 import {
   HiOutlineArrowLeft,
   HiOutlineAdjustmentsHorizontal,
@@ -193,12 +194,10 @@ export default function ProjectDetailPage() {
           className="mt-10 rounded-2xl overflow-hidden aspect-video bg-surface-card border border-border/80 shadow-2xl relative group"
         >
           {project.video_url ? (
-            <video
-              src={project.video_url}
+            <VideoPlayer
+              url={project.video_url}
               poster={project.thumbnail_url}
-              controls
-              playsInline
-              preload="metadata"
+              title={project.title}
               className="w-full h-full object-cover"
             />
           ) : (

@@ -57,10 +57,17 @@ app.use(cors({
     // Allow non-browser requests or same-origin requests with no origin header
     if (!origin) return callback(null, true);
     const clean = origin.replace(/\/$/, '');
+    let isNetlify = false;
+    try {
+      isNetlify = /\.netlify\.app$/.test(new URL(origin).hostname);
+    } catch {
+      isNetlify = false;
+    }
+
     if (
       allowedOrigins.includes(clean) ||
       (process.env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(clean)) ||
-      /\.netlify\.app$/.test(new URL(origin).hostname)
+      isNetlify
     ) {
       return callback(null, true);
     }

@@ -43,6 +43,9 @@ router.put('/', requireAuth, validate(aboutSchema), async (req, res, next) => {
   try {
     const data = req.body;
 
+    const socialLinks = typeof data.socialLinks === 'string' ? data.socialLinks : JSON.stringify(data.socialLinks || {});
+    const tools = typeof data.tools === 'string' ? data.tools : JSON.stringify(data.tools || []);
+
     // Upsert: update existing or insert if none exists
     const { rows: existing } = await pool.query('SELECT id FROM about LIMIT 1');
 
@@ -58,7 +61,7 @@ router.put('/', requireAuth, validate(aboutSchema), async (req, res, next) => {
       `, [
         data.name, data.role, data.bio, data.experience,
         data.location, data.availabilityStatus, data.profileImageUrl,
-        JSON.stringify(data.socialLinks), JSON.stringify(data.tools),
+        socialLinks, tools,
         data.deliveriesStat || '100% On-Time',
         data.resolutionStat || '4K / 60FPS HDR',
         existing[0].id,
@@ -72,7 +75,7 @@ router.put('/', requireAuth, validate(aboutSchema), async (req, res, next) => {
       `, [
         data.name, data.role, data.bio, data.experience,
         data.location, data.availabilityStatus, data.profileImageUrl,
-        JSON.stringify(data.socialLinks), JSON.stringify(data.tools),
+        socialLinks, tools,
         data.deliveriesStat || '100% On-Time',
         data.resolutionStat || '4K / 60FPS HDR',
       ]);
