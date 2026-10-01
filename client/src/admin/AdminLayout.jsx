@@ -66,7 +66,10 @@ export default function AdminLayout() {
         <div className="flex items-center justify-between p-5 border-b border-border">
           <div>
             <h1 className="text-lg font-display font-bold text-text-primary">Dev Anand</h1>
-            <p className="text-xs text-text-muted mt-0.5">Portfolio CMS</p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-[11px] font-mono text-emerald-400">CMS ONLINE</p>
+            </div>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -114,7 +117,7 @@ export default function AdminLayout() {
         {/* Footer */}
         <div className="p-3 border-t border-border space-y-1">
           <a
-            href="/"
+            href={import.meta.env.BASE_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
