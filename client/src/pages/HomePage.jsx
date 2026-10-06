@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
 import {
   projectsAPI, showreelAPI, beforeAfterAPI,
   servicesAPI, aboutAPI,
@@ -93,6 +94,7 @@ const FALLBACK_PROCESS = [
 ];
 
 export default function HomePage() {
+  const { user } = useAuth();
   const context = useOutletContext() || {};
   const settings = context.settings;
   const [loading, setLoading] = useState(true);
@@ -374,7 +376,7 @@ export default function HomePage() {
                       {showreel?.title || 'SHOWREEL IN POST-PRODUCTION'}
                     </p>
                     <p className="text-xs font-mono text-text-muted mt-1.5 max-w-sm mx-auto">
-                      Add and activate your showreel video in the Admin Panel to feature it here.
+                      The official master showreel is currently being assembled and will premiere here soon.
                     </p>
                   </div>
                 </div>
@@ -404,10 +406,10 @@ export default function HomePage() {
               <HiOutlineAdjustmentsHorizontal className="w-6 h-6 text-accent/80" />
             </div>
             <h4 className="text-lg font-display font-bold text-text-primary">
-              COLOR SUITE READY
+              COLOR FINISHING SHOWCASE
             </h4>
             <p className="text-text-muted text-xs font-mono mt-1 max-w-md">
-              Before/after color grade comparisons will appear here once published from the Admin Panel.
+              Side-by-side camera log breakdowns and film emulation grades will be showcased here.
             </p>
           </div>
         ) : (
@@ -481,20 +483,31 @@ export default function HomePage() {
               <HiOutlineFilm className="w-8 h-8 text-accent" />
             </div>
             <h3 className="text-xl font-display font-bold text-text-primary tracking-tight">
-              TIMELINE READY FOR NEW PROJECTS
+              {allProjects.length === 0 ? 'PROJECTS IN POST-PRODUCTION' : 'NO PROJECTS FOUND'}
             </h3>
             <p className="text-text-muted text-sm mt-2 max-w-md">
               {allProjects.length === 0
-                ? 'All previous data has been cleared. Add and publish your new projects from the admin panel to display them here.'
-                : 'No projects found in this category.'}
+                ? 'Recent commercial cuts, brand videos, and narrative pieces are currently in post-production. Selected works will premiere here soon.'
+                : 'No projects match this category. Select another genre or view all works.'}
             </p>
-            <Link
-              to="/admin/projects/new"
-              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full text-xs font-mono font-bold tracking-wider bg-accent text-surface hover:bg-accent-hover transition-all shadow-lg shadow-accent/20"
-            >
-              <HiOutlinePlus className="w-4 h-4" />
-              <span>ADD NEW PROJECT</span>
-            </Link>
+
+            {user ? (
+              <Link
+                to="/admin/projects/new"
+                className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full text-xs font-mono font-bold tracking-wider bg-accent text-surface hover:bg-accent-hover transition-all shadow-lg shadow-accent/20"
+              >
+                <HiOutlinePlus className="w-4 h-4" />
+                <span>ADD NEW PROJECT (ADMIN)</span>
+              </Link>
+            ) : (
+              <a
+                href="#contact"
+                className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-mono font-medium tracking-wider border border-border hover:border-accent/50 text-text-secondary hover:text-text-primary transition-all glass hover:bg-surface-elevated"
+              >
+                <span>INQUIRE FOR PRIVATE REELS</span>
+                <HiOutlineArrowRight className="w-3.5 h-3.5 text-accent" />
+              </a>
+            )}
           </div>
         ) : (
           <motion.div variants={stagger} className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -701,10 +714,10 @@ export default function HomePage() {
               <HiSparkles className="w-6 h-6 text-accent/80" />
             </div>
             <h4 className="text-lg font-display font-bold text-text-primary">
-              SERVICES READY
+              POST-PRODUCTION SERVICES
             </h4>
             <p className="text-text-muted text-xs font-mono mt-1 max-w-md">
-              Specialties and editing services will appear here once configured in the Admin Panel.
+              High-end offline editorial, color grading, sound design, and motion graphics available upon request.
             </p>
           </div>
         ) : (

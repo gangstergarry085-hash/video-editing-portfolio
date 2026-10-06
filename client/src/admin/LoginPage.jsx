@@ -116,20 +116,6 @@ export default function LoginPage() {
                 'Sign In to CMS'
               )}
             </button>
-
-            {/* Quick Demo Fill */}
-            <div className="pt-2 border-t border-border/50 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('admin@devanand.com');
-                  setPassword('garry@2004');
-                }}
-                className="text-xs text-accent hover:underline font-mono"
-              >
-                Auto-fill Admin Credentials (admin@devanand.com)
-              </button>
-            </div>
           </form>
         </div>
 
