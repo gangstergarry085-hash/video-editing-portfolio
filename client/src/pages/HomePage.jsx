@@ -19,6 +19,7 @@ import {
   HiOutlineBolt,
   HiOutlineMusicalNote,
   HiOutlineVideoCamera,
+  HiOutlinePlus,
 } from 'react-icons/hi2';
 
 // ── Animation Variants ──────────────────────────────────
@@ -81,130 +82,7 @@ function SectionTitle({ label, title, subtitle }) {
   );
 }
 
-// ── Fallback Sample Data (ensures rich display if DB is cold) ──
-const FALLBACK_PROJECTS = [
-  {
-    id: 'p-1',
-    slug: 'star-excellent-academy',
-    title: 'Star Excellent Academy Commercial',
-    category: 'Client Work',
-    client_name: 'Star Excellent Academy',
-    short_description:
-      'High-impact promotional commercial featuring rhythmic pacing, kinetic typography, dynamic speed ramping, and pristine color grading.',
-    tools: ['DaVinci Resolve', 'After Effects', 'Premiere Pro'],
-    services_provided: ['Commercial Editing', 'Motion Graphics', 'Color Grading'],
-    thumbnail_url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80',
-    featured: true,
-  },
-  {
-    id: 'p-2',
-    slug: 'neon-horizon-narrative',
-    title: 'Neon Horizon — Sci-Fi Narrative',
-    category: 'Client Work',
-    client_name: 'Aetheria Films',
-    short_description:
-      'Atmospheric neo-noir short film edit with multi-layer sound design, custom LUT color grading, and anamorphic lens distortion passes.',
-    tools: ['DaVinci Resolve Studio', 'Fairlight Audio', 'Fusion VFX'],
-    services_provided: ['Narrative Editing', 'Color Grading', 'Sound Design'],
-    thumbnail_url: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1200&q=80',
-    featured: true,
-  },
-  {
-    id: 'p-3',
-    slug: 'hyper-velocity-fashion',
-    title: 'Hyper Velocity — Fashion Campaign',
-    category: 'Client Work',
-    client_name: 'Vogue Lab Tokyo',
-    short_description:
-      'Fast-paced editorial fashion reel synced to experimental audio beats, featuring glitch transitions and film halation emulation.',
-    tools: ['Premiere Pro', 'After Effects', 'Photoshop'],
-    services_provided: ['Short-Form Cut', 'VFX Transitions', 'Audio Sync'],
-    thumbnail_url: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1200&q=80',
-    featured: true,
-  },
-  {
-    id: 'p-4',
-    slug: 'echoes-of-iceland-doc',
-    title: 'Echoes of the North — Documentary',
-    category: 'Personal Experiment',
-    client_name: 'Independent',
-    short_description:
-      'Contemplative travel documentary exploring volcanic landscapes with slow-burn pacing and rich cinematic tonal gradation.',
-    tools: ['DaVinci Resolve', 'Dehancer Pro'],
-    services_provided: ['Documentary Cut', 'Film Emulation'],
-    thumbnail_url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
-    featured: true,
-  },
-];
-
-const FALLBACK_BEFORE_AFTER = [
-  {
-    id: 'ba-1',
-    title: 'Anamorphic Cinema Grade — S-Log3 to Rec.709 Film',
-    description: 'Transforming flat, low-contrast sensor capture into rich cinematic imagery with warm skin tones and deep atmospheric shadows.',
-    raw_media_url: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=70',
-    final_media_url: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=95',
-  },
-  {
-    id: 'ba-2',
-    title: 'Commercial Product Grade — High Dynamic Range Pop',
-    description: 'Balancing exposure highlights, enhancing saturated product hues, and crafting a crisp, commercial finish.',
-    raw_media_url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=70',
-    final_media_url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=95',
-  },
-];
-
-const FALLBACK_SERVICES = [
-  {
-    id: 's-1',
-    name: 'Short-Form & Social Reels',
-    description: 'Thumb-stopping, retention-optimized short-form edits for Instagram, YouTube Shorts, and TikTok with razor-sharp pacing and dynamic kinetic subtitles.',
-    icon: HiOutlineBolt,
-    badge: 'VIRAL RETENTION',
-    deliverables: ['9:16 Vertical Export', 'Attention Hook Framing', 'Kinetic Captions', 'Sound Design Accents'],
-  },
-  {
-    id: 's-2',
-    name: 'YouTube & Long-Form Narrative',
-    description: 'Strategic pacing, compelling storytelling arcs, multi-cam assembly, custom B-roll cut-ins, and audience retention engineering for creators.',
-    icon: HiOutlineFilm,
-    badge: 'STORY ARC',
-    deliverables: ['16:9 4K DCI Cut', 'Multi-Cam Synchronization', 'Custom Lower Thirds', 'High CTR Thumbnail Stills'],
-  },
-  {
-    id: 's-3',
-    name: 'Motion Graphics & Titles',
-    description: 'Custom animated title sequences, 3D lower thirds, kinetic typography, callout graphics, screen replacements, and branded logo stings.',
-    icon: HiSparkles,
-    badge: 'AFTER EFFECTS VFX',
-    deliverables: ['Keyframe Animations', 'Kinetic Typography', 'Logo Ident Animation', 'Motion Graphic Callouts'],
-  },
-  {
-    id: 's-4',
-    name: 'Cinematic Color Grading',
-    description: 'Professional color balancing, skin tone isolation, contrast curve sculpting, film halation, and bespoke Hollywood LUT emulation in DaVinci Resolve Studio.',
-    icon: HiOutlineAdjustmentsHorizontal,
-    badge: 'DAVINCI RESOLVE',
-    deliverables: ['Log-to-Rec.709 CST', 'Skin Tone Vectorscope Isolation', 'Film Halation & Grain Emulation', 'Custom Cinema LUT Exports'],
-  },
-  {
-    id: 's-5',
-    name: 'Sound Design & Spatial Foley',
-    description: 'Multi-track audio soundscapes, visceral impacts, cinematic whooshes, ambient room tone balancing, dialogue de-noise, and broadcast loudness mastering.',
-    icon: HiOutlineMusicalNote,
-    badge: 'FAIRLIGHT AUDIO',
-    deliverables: ['Multi-Track Foley Layering', 'Dialogue Denoise & EQ', 'Sub-Bass Drops & Risers', '-14 LUFS Streaming Normalization'],
-  },
-  {
-    id: 's-6',
-    name: 'Brand & Commercial Ads',
-    description: 'Polished promotional videos for agencies, founders, and lifestyle brands engineered to convert audiences and elevate brand prestige.',
-    icon: HiOutlineVideoCamera,
-    badge: 'COMMERCIAL FINISH',
-    deliverables: ['Multi-Aspect Master Deliverables', 'Product Feature Highlights', 'Commercial Color Science', 'Broadcast & Social Cutdowns'],
-  },
-];
-
+// ── Fallback Process Steps (Editorial workflow reference) ──
 const FALLBACK_PROCESS = [
   { step: 1, track: 'V1', node: 'NODE 01', label: 'INGEST', title: 'Vision & Creative Brief', description: 'Aligning on project tone, visual references, target runtime, pacing blueprint, and distribution platform specifications.' },
   { step: 2, track: 'V2', node: 'NODE 02', label: 'ASSEMBLY', title: 'Selects & Timeline Assembly', description: 'Cataloging selects, synchronizing multi-camera audio tracks, eliminating dead air, and locking the structural story narrative.' },
@@ -217,10 +95,11 @@ const FALLBACK_PROCESS = [
 export default function HomePage() {
   const context = useOutletContext() || {};
   const settings = context.settings;
+  const [loading, setLoading] = useState(true);
   const [showreel, setShowreel] = useState(null);
-  const [allProjects, setAllProjects] = useState(FALLBACK_PROJECTS);
-  const [beforeAfter, setBeforeAfter] = useState(FALLBACK_BEFORE_AFTER);
-  const [services, setServices] = useState(FALLBACK_SERVICES);
+  const [allProjects, setAllProjects] = useState([]);
+  const [beforeAfter, setBeforeAfter] = useState([]);
+  const [services, setServices] = useState([]);
   const [about, setAbout] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
 
@@ -234,25 +113,39 @@ export default function HomePage() {
       servicesAPI.list(),
       aboutAPI.get(),
     ]).then(([srRes, apRes, baRes, svRes, abRes]) => {
-      if (srRes.status === 'fulfilled' && srRes.value.data) {
-        setShowreel(srRes.value.data);
+      if (srRes.status === 'fulfilled') {
+        const sr = srRes.value.data?.showreel !== undefined
+          ? srRes.value.data.showreel
+          : srRes.value.data;
+        setShowreel(sr || null);
       }
-      if (apRes.status === 'fulfilled' && apRes.value.data?.length > 0) {
-        setAllProjects(apRes.value.data);
+      if (apRes.status === 'fulfilled') {
+        const list = Array.isArray(apRes.value.data)
+          ? apRes.value.data
+          : (apRes.value.data?.projects || []);
+        setAllProjects(list);
       }
-      if (baRes.status === 'fulfilled' && baRes.value.data?.length > 0) {
-        setBeforeAfter(baRes.value.data);
+      if (baRes.status === 'fulfilled') {
+        const baList = Array.isArray(baRes.value.data)
+          ? baRes.value.data
+          : (baRes.value.data?.items || []);
+        setBeforeAfter(baList);
       }
-      if (svRes.status === 'fulfilled' && svRes.value.data?.length > 0) {
-        setServices(svRes.value.data);
+      if (svRes.status === 'fulfilled') {
+        const svList = Array.isArray(svRes.value.data)
+          ? svRes.value.data
+          : (svRes.value.data?.services || []);
+        setServices(svList);
       }
       if (abRes.status === 'fulfilled' && abRes.value.data) {
-        setAbout(abRes.value.data);
+        setAbout(abRes.value.data?.about || abRes.value.data);
       }
+    }).finally(() => {
+      setLoading(false);
     });
   }, []);
 
-  const projectsToDisplay = allProjects.length > 0 ? allProjects : FALLBACK_PROJECTS;
+  const projectsToDisplay = allProjects;
   const filteredProjects =
     activeCategory === 'All'
       ? projectsToDisplay
@@ -435,59 +328,54 @@ export default function HomePage() {
         <motion.div variants={fadeUp} className="relative">
           <TiltCard className="rounded-3xl overflow-hidden glass-card p-3 shadow-2xl border border-border group">
             <div className="relative rounded-2xl overflow-hidden aspect-video bg-surface-card glow">
-              {showreel?.video_url ? (
+              {loading ? (
+                <div className="w-full h-full bg-surface-card flex items-center justify-center animate-pulse">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs font-mono text-text-muted uppercase tracking-wider">
+                      INGESTING SHOWREEL...
+                    </span>
+                  </div>
+                </div>
+              ) : showreel?.video_url ? (
                 <VideoPlayer
                   url={showreel.video_url}
                   poster={showreel.thumbnail_url}
-                  title={showreel.title || 'Dev Anand Showreel'}
+                  title={showreel.title || 'Master Showreel'}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                /* Fallback Showreel Interactive Player Simulation */
-                <div className="relative w-full h-full bg-gradient-to-tr from-neutral-950 via-surface-card to-neutral-900 flex items-center justify-center group/video overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1600&q=80"
-                    alt="Dev Anand Showreel"
-                    loading="lazy"
-                    decoding="async"
-                    className="absolute inset-0 w-full h-full object-cover opacity-45 group-hover/video:scale-105 transition-transform duration-700 filter brightness-90"
-                  />
+                /* Clean Standby HUD Frame */
+                <div className="relative w-full h-full bg-gradient-to-tr from-neutral-950 via-surface-card to-neutral-900 flex items-center justify-center overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-surface/40" />
 
                   {/* Director's Viewfinder HUD Frame */}
-                  <div className="absolute inset-4 border border-white/15 rounded-xl pointer-events-none flex flex-col justify-between p-4">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-white/70">
+                  <div className="absolute inset-4 border border-white/10 rounded-xl pointer-events-none flex flex-col justify-between p-4">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-white/50">
                       <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                        <span className="tracking-widest font-bold text-white">REC 4K DCI</span>
+                        <span className="w-2 h-2 rounded-full bg-accent/60" />
+                        <span className="tracking-widest font-bold text-white/80">STANDBY 4K DCI</span>
                       </div>
-                      <span className="tracking-wider text-white/50">ASPECT: 2.39:1 CINEMASCOPE</span>
+                      <span className="tracking-wider text-white/40">ASPECT: 16:9 CINEMA</span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] font-mono text-white/70">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-white/40">
                       <span className="tracking-wider">FPS: 24.000</span>
                       <span className="tracking-wider">AUDIO: 48kHz STEREO</span>
                     </div>
                   </div>
 
-                  {/* Play Button Overlay */}
-                  <div className="relative z-10 text-center">
-                    <div className="w-20 h-20 rounded-full bg-accent text-surface flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(var(--accent-rgb),0.8)] group-hover/video:scale-110 transition-all duration-300">
-                      <HiPlay className="w-8 h-8 ml-1" />
+                  {/* Clean Standby Message */}
+                  <div className="relative z-10 text-center px-6">
+                    <div className="w-16 h-16 rounded-full bg-surface-elevated/80 border border-border flex items-center justify-center mx-auto text-text-muted mb-3 shadow-lg">
+                      <HiPlay className="w-6 h-6 ml-0.5 text-accent/80" />
                     </div>
-                    <p className="mt-4 font-display font-black text-xl text-text-primary tracking-wide">
-                      PLAY MASTER REEL
+                    <p className="font-display font-bold text-lg sm:text-xl text-text-primary tracking-wide">
+                      {showreel?.title || 'SHOWREEL IN POST-PRODUCTION'}
                     </p>
-                    <p className="text-xs font-mono text-text-muted mt-1">
-                      PRORES 422 HQ · 01:15 MASTER CUT
+                    <p className="text-xs font-mono text-text-muted mt-1.5 max-w-sm mx-auto">
+                      Add and activate your showreel video in the Admin Panel to feature it here.
                     </p>
-                  </div>
-
-                  {/* Corner Timecode Badge */}
-                  <div className="absolute top-6 left-6 z-10 hidden sm:block">
-                    <span className="timecode bg-black/70 px-3 py-1.5 rounded-md border border-white/10 text-xs font-mono text-text-primary">
-                      TC 01:00:00:00 // REEL_v04.mov
-                    </span>
                   </div>
                 </div>
               )}
@@ -504,18 +392,38 @@ export default function HomePage() {
           subtitle="Continuous comparison demonstrating how flat camera sensor profiles are sculpted with rich contrast, filmic saturation, and skin tone fidelity."
         />
 
-        <div className="space-y-16">
-          {(beforeAfter.length > 0 ? beforeAfter : FALLBACK_BEFORE_AFTER).map((item) => (
-            <motion.div key={item.id} variants={fadeUp}>
-              <BeforeAfterSlider
-                title={item.title}
-                description={item.description}
-                rawMedia={item.raw_media_url}
-                finalMedia={item.final_media_url}
-              />
-            </motion.div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="rounded-2xl bg-surface-card border border-border/60 p-8 flex items-center justify-center aspect-[21/9] animate-pulse">
+            <span className="text-xs font-mono text-text-muted uppercase tracking-wider">
+              LOADING COLOR FINISHING SUITE...
+            </span>
+          </div>
+        ) : beforeAfter.length === 0 ? (
+          <div className="py-14 px-6 rounded-2xl glass-card border border-border/70 text-center flex flex-col items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-surface-elevated border border-border flex items-center justify-center mb-3 text-text-muted">
+              <HiOutlineAdjustmentsHorizontal className="w-6 h-6 text-accent/80" />
+            </div>
+            <h4 className="text-lg font-display font-bold text-text-primary">
+              COLOR SUITE READY
+            </h4>
+            <p className="text-text-muted text-xs font-mono mt-1 max-w-md">
+              Before/after color grade comparisons will appear here once published from the Admin Panel.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-16">
+            {beforeAfter.map((item) => (
+              <motion.div key={item.id} variants={fadeUp}>
+                <BeforeAfterSlider
+                  title={item.title}
+                  description={item.description}
+                  rawMedia={item.raw_media_url}
+                  finalMedia={item.final_media_url}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </Section>
 
       {/* ── SELECTED WORK / PORTFOLIO ─────────────────── */}
@@ -546,121 +454,165 @@ export default function HomePage() {
         </div>
 
         {/* Projects Grid */}
-        <motion.div variants={stagger} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <AnimatePresence mode="popLayout">
-            {filteredProjects.map((project) => (
-              <motion.div
-                key={project.id}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[1, 2].map((n) => (
+              <div
+                key={n}
+                className="rounded-2xl overflow-hidden bg-surface-card border border-border/60 p-1 flex flex-col animate-pulse"
               >
-                <TiltCard className="group h-full">
-                  <Link
-                    to={`/project/${project.slug}`}
-                    className="block h-full rounded-2xl overflow-hidden bg-surface-card border border-border/80 hover:border-accent/50 transition-all duration-300 shadow-xl hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] flex flex-col"
-                  >
-                    {/* Media Thumbnail with Viewfinder HUD */}
-                    <div className="relative aspect-video overflow-hidden bg-surface-elevated">
-                      {project.thumbnail_url ? (
-                        <img
-                          src={project.thumbnail_url}
-                          alt={project.title}
-                          loading="lazy"
-                          decoding="async"
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter brightness-95 group-hover:brightness-100"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <span className="timecode">NO THUMBNAIL</span>
-                        </div>
-                      )}
-
-                      {/* Cinematic Letterbox Vignette */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-surface-card via-transparent to-black/30 opacity-70 group-hover:opacity-40 transition-opacity duration-300" />
-
-                      {/* Corner Viewfinder Crosshairs */}
-                      <div className="absolute inset-3 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between">
-                        <div className="flex justify-between">
-                          <span className="text-[9px] font-mono text-white/50 tracking-tighter">[ ⤡ ]</span>
-                          <span className="text-[9px] font-mono text-white/50 tracking-tighter">[ ⤢ ]</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[9px] font-mono text-white/50 tracking-tighter">[ ⤢ ]</span>
-                          <span className="text-[9px] font-mono text-white/50 tracking-tighter">[ ⤡ ]</span>
-                        </div>
-                      </div>
-
-                      {/* Category Badge - Top Left */}
-                      <div className="absolute top-3.5 left-3.5 z-10">
-                        <span className="px-2.5 py-1 rounded-md text-[10px] font-mono tracking-wider uppercase glass-card border border-white/15 text-white font-medium shadow">
-                          {project.category}
-                        </span>
-                      </div>
-
-                      {/* Format Badge - Top Right */}
-                      <div className="absolute top-3.5 right-3.5 z-10">
-                        <span className="px-2 py-0.5 rounded text-[9px] font-mono tracking-widest uppercase bg-black/60 border border-white/10 text-text-secondary">
-                          4K DCI · 24P
-                        </span>
-                      </div>
-
-                      {/* Centered Hover Play / Expand Indicator */}
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                        <div className="w-12 h-12 rounded-full bg-accent/90 text-surface flex items-center justify-center opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 shadow-xl shadow-accent/40">
-                          <HiPlay className="w-5 h-5 ml-0.5" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Project Metadata */}
-                    <div className="p-6 flex-1 flex flex-col justify-between">
-                      <div>
-                        {project.client_name && (
-                          <div className="flex items-center gap-1.5 mb-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                            <span className="text-xs font-mono text-accent uppercase tracking-wider font-semibold">
-                              {project.client_name}
-                            </span>
+                <div className="aspect-video bg-surface-elevated/70 rounded-xl relative flex items-center justify-center">
+                  <span className="text-[10px] font-mono text-text-muted/60 tracking-widest uppercase">
+                    LOADING TIMELINE...
+                  </span>
+                </div>
+                <div className="p-6 space-y-3">
+                  <div className="h-3 w-28 bg-surface-elevated rounded" />
+                  <div className="h-6 w-3/4 bg-surface-elevated rounded" />
+                  <div className="h-4 w-full bg-surface-elevated rounded" />
+                  <div className="h-4 w-1/2 bg-surface-elevated rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredProjects.length === 0 ? (
+          <div className="py-20 px-6 rounded-2xl glass-card border border-border/70 text-center flex flex-col items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-surface-elevated border border-border flex items-center justify-center mb-4 text-text-muted">
+              <HiOutlineFilm className="w-8 h-8 text-accent" />
+            </div>
+            <h3 className="text-xl font-display font-bold text-text-primary tracking-tight">
+              TIMELINE READY FOR NEW PROJECTS
+            </h3>
+            <p className="text-text-muted text-sm mt-2 max-w-md">
+              {allProjects.length === 0
+                ? 'All previous data has been cleared. Add and publish your new projects from the admin panel to display them here.'
+                : 'No projects found in this category.'}
+            </p>
+            <Link
+              to="/admin/projects/new"
+              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full text-xs font-mono font-bold tracking-wider bg-accent text-surface hover:bg-accent-hover transition-all shadow-lg shadow-accent/20"
+            >
+              <HiOutlinePlus className="w-4 h-4" />
+              <span>ADD NEW PROJECT</span>
+            </Link>
+          </div>
+        ) : (
+          <motion.div variants={stagger} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <AnimatePresence mode="popLayout">
+              {filteredProjects.map((project) => (
+                <motion.div
+                  key={project.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <TiltCard className="group h-full">
+                    <Link
+                      to={`/project/${project.slug}`}
+                      className="block h-full rounded-2xl overflow-hidden bg-surface-card border border-border/80 hover:border-accent/50 transition-all duration-300 shadow-xl hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] flex flex-col"
+                    >
+                      {/* Media Thumbnail with Viewfinder HUD */}
+                      <div className="relative aspect-video overflow-hidden bg-surface-elevated">
+                        {project.thumbnail_url ? (
+                          <img
+                            src={project.thumbnail_url}
+                            alt={project.title}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter brightness-95 group-hover:brightness-100"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className="timecode">NO THUMBNAIL</span>
                           </div>
                         )}
-                        <h3 className="text-xl font-display font-bold text-text-primary group-hover:text-accent transition-colors tracking-tight line-clamp-1">
-                          {project.title}
-                        </h3>
-                        {project.short_description && (
-                          <p className="text-sm text-text-secondary mt-2 line-clamp-2 leading-relaxed font-sans">
-                            {project.short_description}
-                          </p>
-                        )}
-                      </div>
 
-                      {/* Tool Tags and View Action */}
-                      <div className="flex items-center justify-between mt-5 pt-4 border-t border-border/60">
-                        <div className="flex flex-wrap gap-1.5">
-                          {(project.tools || []).slice(0, 3).map((tool) => (
-                            <span
-                              key={tool}
-                              className="text-[10px] font-mono text-text-secondary bg-surface-elevated px-2 py-0.5 rounded border border-border/50"
-                            >
-                              {tool}
-                            </span>
-                          ))}
+                        {/* Cinematic Letterbox Vignette */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-surface-card via-transparent to-black/30 opacity-70 group-hover:opacity-40 transition-opacity duration-300" />
+
+                        {/* Corner Viewfinder Crosshairs */}
+                        <div className="absolute inset-3 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between">
+                          <div className="flex justify-between">
+                            <span className="text-[9px] font-mono text-white/50 tracking-tighter">[ ⤡ ]</span>
+                            <span className="text-[9px] font-mono text-white/50 tracking-tighter">[ ⤢ ]</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[9px] font-mono text-white/50 tracking-tighter">[ ⤢ ]</span>
+                            <span className="text-[9px] font-mono text-white/50 tracking-tighter">[ ⤡ ]</span>
+                          </div>
                         </div>
 
-                        <span className="inline-flex items-center gap-1 text-xs font-mono font-medium text-accent opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all">
-                          <span>TIMELINE</span>
-                          <HiOutlineArrowRight className="w-3.5 h-3.5" />
-                        </span>
+                        {/* Category Badge - Top Left */}
+                        <div className="absolute top-3.5 left-3.5 z-10">
+                          <span className="px-2.5 py-1 rounded-md text-[10px] font-mono tracking-wider uppercase glass-card border border-white/15 text-white font-medium shadow">
+                            {project.category}
+                          </span>
+                        </div>
+
+                        {/* Format Badge - Top Right */}
+                        <div className="absolute top-3.5 right-3.5 z-10">
+                          <span className="px-2 py-0.5 rounded text-[9px] font-mono tracking-widest uppercase bg-black/60 border border-white/10 text-text-secondary">
+                            4K DCI · 24P
+                          </span>
+                        </div>
+
+                        {/* Centered Hover Play / Expand Indicator */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                          <div className="w-12 h-12 rounded-full bg-accent/90 text-surface flex items-center justify-center opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 shadow-xl shadow-accent/40">
+                            <HiPlay className="w-5 h-5 ml-0.5" />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                </TiltCard>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+
+                      {/* Project Metadata */}
+                      <div className="p-6 flex-1 flex flex-col justify-between">
+                        <div>
+                          {project.client_name && (
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                              <span className="text-xs font-mono text-accent uppercase tracking-wider font-semibold">
+                                {project.client_name}
+                              </span>
+                            </div>
+                          )}
+                          <h3 className="text-xl font-display font-bold text-text-primary group-hover:text-accent transition-colors tracking-tight line-clamp-1">
+                            {project.title}
+                          </h3>
+                          {project.short_description && (
+                            <p className="text-sm text-text-secondary mt-2 line-clamp-2 leading-relaxed font-sans">
+                              {project.short_description}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Tool Tags and View Action */}
+                        <div className="flex items-center justify-between mt-5 pt-4 border-t border-border/60">
+                          <div className="flex flex-wrap gap-1.5">
+                            {(project.tools || []).slice(0, 3).map((tool) => (
+                              <span
+                                key={tool}
+                                className="text-[10px] font-mono text-text-secondary bg-surface-elevated px-2 py-0.5 rounded border border-border/50"
+                              >
+                                {tool}
+                              </span>
+                            ))}
+                          </div>
+
+                          <span className="inline-flex items-center gap-1 text-xs font-mono font-medium text-accent opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all">
+                            <span>TIMELINE</span>
+                            <HiOutlineArrowRight className="w-3.5 h-3.5" />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </TiltCard>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
       </Section>
 
       {/* ── EDITING WORKFLOW PROCESS ───────────────────── */}
@@ -729,60 +681,88 @@ export default function HomePage() {
           subtitle="Tailored post-production solutions for creative agencies, filmmakers, content creators, and innovative brands."
         />
 
-        <motion.div variants={stagger} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(services.length > 0 ? services : FALLBACK_SERVICES).map((svc) => {
-            const IconComponent = svc.icon || HiSparkles;
-            return (
-              <motion.div key={svc.id} variants={fadeUp}>
-                <TiltCard className="group h-full">
-                  <div className="bg-surface-card rounded-2xl p-6 sm:p-7 border border-border/80 hover:border-accent/40 transition-all duration-300 h-full flex flex-col justify-between shadow-lg">
-                    <div>
-                      {/* Icon and Badge Header */}
-                      <div className="flex items-center justify-between mb-5">
-                        <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent group-hover:scale-110 group-hover:bg-accent group-hover:text-surface transition-all duration-300">
-                          <IconComponent className="w-5 h-5" />
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="bg-surface-card rounded-2xl p-6 border border-border/60 animate-pulse space-y-4"
+              >
+                <div className="w-12 h-12 rounded-xl bg-surface-elevated" />
+                <div className="h-5 w-3/4 bg-surface-elevated rounded" />
+                <div className="h-4 w-full bg-surface-elevated rounded" />
+                <div className="h-4 w-2/3 bg-surface-elevated rounded" />
+              </div>
+            ))}
+          </div>
+        ) : services.length === 0 ? (
+          <div className="py-14 px-6 rounded-2xl glass-card border border-border/70 text-center flex flex-col items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-surface-elevated border border-border flex items-center justify-center mb-3 text-text-muted">
+              <HiSparkles className="w-6 h-6 text-accent/80" />
+            </div>
+            <h4 className="text-lg font-display font-bold text-text-primary">
+              SERVICES READY
+            </h4>
+            <p className="text-text-muted text-xs font-mono mt-1 max-w-md">
+              Specialties and editing services will appear here once configured in the Admin Panel.
+            </p>
+          </div>
+        ) : (
+          <motion.div variants={stagger} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.map((svc) => {
+              const IconComponent = svc.icon || HiSparkles;
+              return (
+                <motion.div key={svc.id} variants={fadeUp}>
+                  <TiltCard className="group h-full">
+                    <div className="bg-surface-card rounded-2xl p-6 sm:p-7 border border-border/80 hover:border-accent/40 transition-all duration-300 h-full flex flex-col justify-between shadow-lg">
+                      <div>
+                        {/* Icon and Badge Header */}
+                        <div className="flex items-center justify-between mb-5">
+                          <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent group-hover:scale-110 group-hover:bg-accent group-hover:text-surface transition-all duration-300">
+                            <IconComponent className="w-5 h-5" />
+                          </div>
+                          {svc.badge && (
+                            <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted border border-border px-2 py-0.5 rounded-full">
+                              {svc.badge}
+                            </span>
+                          )}
                         </div>
-                        {svc.badge && (
-                          <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted border border-border px-2 py-0.5 rounded-full">
-                            {svc.badge}
-                          </span>
+
+                        <h3 className="text-lg font-display font-bold text-text-primary group-hover:text-accent transition-colors">
+                          {svc.name}
+                        </h3>
+                        {svc.description && (
+                          <p className="text-sm text-text-secondary mt-2.5 leading-relaxed font-sans">
+                            {svc.description}
+                          </p>
                         )}
                       </div>
 
-                      <h3 className="text-lg font-display font-bold text-text-primary group-hover:text-accent transition-colors">
-                        {svc.name}
-                      </h3>
-                      {svc.description && (
-                        <p className="text-sm text-text-secondary mt-2.5 leading-relaxed font-sans">
-                          {svc.description}
-                        </p>
+                      {/* Deliverables Pills */}
+                      {svc.deliverables && svc.deliverables.length > 0 && (
+                        <div className="mt-6 pt-4 border-t border-border/60">
+                          <span className="block text-[10px] font-mono text-text-muted uppercase tracking-wider mb-2">
+                            DELIVERABLES
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {svc.deliverables.map((item) => (
+                              <span
+                                key={item}
+                                className="text-[10px] font-mono text-text-secondary bg-surface-elevated px-2 py-0.5 rounded border border-border/40"
+                              >
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       )}
                     </div>
-
-                    {/* Deliverables Pills */}
-                    {svc.deliverables && svc.deliverables.length > 0 && (
-                      <div className="mt-6 pt-4 border-t border-border/60">
-                        <span className="block text-[10px] font-mono text-text-muted uppercase tracking-wider mb-2">
-                          DELIVERABLES
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {svc.deliverables.map((item) => (
-                            <span
-                              key={item}
-                              className="text-[10px] font-mono text-text-secondary bg-surface-elevated px-2 py-0.5 rounded border border-border/40"
-                            >
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </TiltCard>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+                  </TiltCard>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
       </Section>
 
       {/* ── ABOUT & TOOLKIT ───────────────────────────── */}

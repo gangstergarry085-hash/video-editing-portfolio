@@ -115,47 +115,11 @@ async function seed() {
       console.log('  ✓ Services already exist');
     }
 
-    // ── Sample project (Star Excellent Academy) ───────
-    const { rowCount: projectsExist } = await client.query('SELECT 1 FROM projects LIMIT 1');
-    if (projectsExist === 0) {
-      await client.query(`
-        INSERT INTO projects (
-          title, slug, category, description, short_description,
-          tools, client_name, client_description, dev_role,
-          services_provided, project_year, project_type,
-          featured, published, display_order
-        ) VALUES (
-          'Star Excellent Academy',
-          'star-excellent-academy',
-          'Client Work',
-          'Promotional video project for Star Excellent Academy — a real paid client engagement. Handled end-to-end video editing and motion graphics for the academy''s promotional content.',
-          'Promotional video for Star Excellent Academy.',
-          $1, 'Star Excellent Academy',
-          'An educational academy seeking professional video content for promotion.',
-          'Video Editor & Motion Graphics Designer',
-          $2, 2024, 'Promotional Video',
-          TRUE, TRUE, 0
-        )
-      `, [
-        ['DaVinci Resolve', 'After Effects', 'Photoshop'],
-        ['Video Editing', 'Motion Graphics', 'Color Grading'],
-      ]);
-      console.log('✔ Sample project seeded (Star Excellent Academy)');
-    } else {
-      console.log('  ✓ Projects already exist');
-    }
+    // ── Sample project (disabled to keep database clean for user data) ──
+    console.log('  ✓ Projects table ready (clean)');
 
-    // ── Default showreel row ──────────────────────────
-    const { rowCount: showreelExists } = await client.query('SELECT 1 FROM showreels LIMIT 1');
-    if (showreelExists === 0) {
-      await client.query(`
-        INSERT INTO showreels (title, description, active)
-        VALUES ('Main Showreel', 'Dev Anand — Video Editing Showreel', TRUE)
-      `);
-      console.log('✔ Showreel placeholder seeded');
-    } else {
-      console.log('  ✓ Showreel already exists');
-    }
+    // ── Showreel (disabled to keep database clean for user data) ──────
+    console.log('  ✓ Showreels table ready (clean)');
 
     console.log('\nSeed complete!');
   } catch (err) {

@@ -39,6 +39,18 @@ function App() {
     try {
       localStorage.removeItem('dev_portfolio_theme');
       document.documentElement.removeAttribute('data-theme');
+
+      // Purge any previously cached demo projects, before-after, and showreel from localStorage
+      const purgeIfSample = (key, identifier) => {
+        const val = localStorage.getItem(key);
+        if (val && val.includes(identifier)) {
+          localStorage.removeItem(key);
+        }
+      };
+      purgeIfSample('dev_cms_projects', 'star-excellent-academy');
+      purgeIfSample('dev_cms_before_after', 'ba-1');
+      purgeIfSample('dev_cms_showreels', 'Official Showreel 2024-2025');
+      purgeIfSample('dev_cms_media', 'showreel-poster.jpg');
     } catch {
       // ignore
     }

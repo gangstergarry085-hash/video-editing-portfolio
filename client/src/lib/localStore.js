@@ -22,71 +22,7 @@ const DEFAULT_ADMIN = {
 
 const DEFAULT_PASSWORD = 'garry@2004';
 
-const INITIAL_PROJECTS = [
-  {
-    id: 'p-1',
-    slug: 'star-excellent-academy',
-    title: 'Star Excellent Academy Commercial',
-    category: 'Client Work',
-    client_name: 'Star Excellent Academy',
-    client_description: 'Premier educational academy seeking high-converting promotional content.',
-    dev_role: 'Lead Video Editor & Motion Graphics Designer',
-    short_description: 'High-impact commercial featuring rhythmic pacing, kinetic typography, dynamic speed ramping, and pristine color grading.',
-    description: 'Promotional video project for Star Excellent Academy. Handled end-to-end video editing and motion graphics for the academy\'s promotional content across digital channels.',
-    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-set-of-plateaus-seen-from-the-sky-in-a-sunset-26070-large.mp4',
-    thumbnail_url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80',
-    tools: ['DaVinci Resolve', 'After Effects', 'Premiere Pro', 'Photoshop'],
-    services_provided: ['Commercial Editing', 'Motion Graphics', 'Color Grading', 'Sound Design'],
-    project_year: 2024,
-    project_type: 'Commercial',
-    featured: true,
-    published: true,
-    display_order: 0,
-    created_at: new Date('2024-03-01').toISOString(),
-  },
-  {
-    id: 'p-2',
-    slug: 'pulse-fitness-app-reel',
-    title: 'Pulse Fitness Kinetic Promo',
-    category: 'Motion Graphics',
-    client_name: 'Pulse Technologies',
-    client_description: 'Next-generation fitness app combining biometric tracking with workout coaching.',
-    dev_role: 'Motion Designer & Sound Editor',
-    short_description: 'High-energy 9:16 vertical motion design reel with custom 3D phone tracking and sound sync.',
-    description: 'Produced a viral social campaign showcasing UI screen replacements, beat-synced beat drops, and kinetic type animations tailored for TikTok and Instagram Reels.',
-    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-silhouette-of-a-man-working-out-with-dumbbells-43284-large.mp4',
-    thumbnail_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80',
-    tools: ['After Effects', 'DaVinci Resolve', 'Audition'],
-    services_provided: ['Short-Form Vertical', 'Motion Graphics', 'Sound Design'],
-    project_year: 2024,
-    project_type: 'Social Ad',
-    featured: true,
-    published: true,
-    display_order: 1,
-    created_at: new Date('2024-02-15').toISOString(),
-  },
-  {
-    id: 'p-3',
-    slug: 'nordic-echoes-documentary',
-    title: 'Nordic Echoes — Mini Documentary',
-    category: 'Cinematic',
-    client_name: 'Fjord Narrative Films',
-    client_description: 'Independent documentary studio exploring remote Arctic landscapes.',
-    dev_role: 'Offline & Online Editor, Colorist',
-    short_description: 'Atmospheric pacing with rich ambient soundscapes and cinematic film emulation.',
-    description: 'Paced over 40 hours of drone and cinema camera footage down to an emotionally gripping 12-minute documentary cut. Graded in DaVinci Resolve using custom Kodak 2383 LUT curves.',
-    video_url: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-foggy-pine-forest-41566-large.mp4',
-    thumbnail_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
-    tools: ['DaVinci Resolve', 'Premiere Pro'],
-    services_provided: ['Cinematic Editing', 'Color Grading', 'Sound Design'],
-    project_year: 2023,
-    project_type: 'Documentary',
-    featured: true,
-    published: true,
-    display_order: 2,
-    created_at: new Date('2023-11-20').toISOString(),
-  }
-];
+const INITIAL_PROJECTS = [];
 
 const INITIAL_SERVICES = [
   { id: 's-1', name: 'Short-form Content', description: 'Reels, TikToks, and Shorts engineered for high viewer retention, pacing, and viral engagement.', display_order: 0, published: true },
@@ -98,30 +34,9 @@ const INITIAL_SERVICES = [
   { id: 's-7', name: 'Sound Design & Mixing', description: 'Multi-layer foley, riser/whoosh impacts, music timing, and broadcast-ready audio mastering.', display_order: 6, published: true },
 ];
 
-const INITIAL_SHOWREEL = {
-  id: 'sr-1',
-  title: 'Official Showreel 2024-2025',
-  description: 'A rapid montage of selected commercial, narrative, motion graphics, and color grading projects.',
-  video_url: 'https://assets.mixkit.co/videos/preview/mixkit-set-of-plateaus-seen-from-the-sky-in-a-sunset-26070-large.mp4',
-  thumbnail_url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1920&q=85',
-  aspect_ratio: '16:9',
-  is_active: true,
-  display_order: 0,
-};
+const INITIAL_SHOWREEL = null;
 
-const INITIAL_BEFORE_AFTER = [
-  {
-    id: 'ba-1',
-    title: 'Golden Hour Cinematic Grade',
-    description: 'Transforming flat Log sensor footage into a rich, contrasty golden-hour look.',
-    before_image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=60&sat=-80',
-    after_image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=90',
-    before_label: 'Flat Log',
-    after_label: 'Rec.709 Color Grade',
-    published: true,
-    display_order: 0,
-  }
-];
+const INITIAL_BEFORE_AFTER = [];
 
 const INITIAL_ABOUT = {
   name: 'Dev Anand',
@@ -164,24 +79,7 @@ const INITIAL_SETTINGS = {
   ],
 };
 
-const INITIAL_MEDIA = [
-  {
-    id: 'm-1',
-    filename: 'showreel-poster.jpg',
-    url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80',
-    type: 'image/jpeg',
-    size: 245000,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'm-2',
-    filename: 'academy-commercial.jpg',
-    url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80',
-    type: 'image/jpeg',
-    size: 312000,
-    created_at: new Date().toISOString(),
-  }
-];
+const INITIAL_MEDIA = [];
 
 function getStored(key, fallback) {
   try {
@@ -355,18 +253,18 @@ export const localStore = {
 
   // ── Showreel ──────────────────────────
   getActiveShowreel() {
-    const items = getStored(STORAGE_KEYS.SHOWREELS, [INITIAL_SHOWREEL]);
-    const active = items.find(s => s.is_active) || items[0] || INITIAL_SHOWREEL;
+    const items = getStored(STORAGE_KEYS.SHOWREELS, []);
+    const active = items.find(s => s.is_active) || items[0] || null;
     return Promise.resolve({ data: { showreel: active } });
   },
 
   getShowreels() {
-    const items = getStored(STORAGE_KEYS.SHOWREELS, [INITIAL_SHOWREEL]);
+    const items = getStored(STORAGE_KEYS.SHOWREELS, []);
     return Promise.resolve({ data: { showreels: items } });
   },
 
   createShowreel(data) {
-    const items = getStored(STORAGE_KEYS.SHOWREELS, [INITIAL_SHOWREEL]);
+    const items = getStored(STORAGE_KEYS.SHOWREELS, []);
     const newSr = {
       ...data,
       id: 'sr-' + Date.now(),
@@ -382,7 +280,7 @@ export const localStore = {
   },
 
   updateShowreel(id, data) {
-    const items = getStored(STORAGE_KEYS.SHOWREELS, [INITIAL_SHOWREEL]);
+    const items = getStored(STORAGE_KEYS.SHOWREELS, []);
     const index = items.findIndex(s => s.id === id);
     if (index === -1) return Promise.reject({ response: { status: 404, data: { error: 'Showreel not found' } } });
     if (data.is_active) {
@@ -394,7 +292,7 @@ export const localStore = {
   },
 
   deleteShowreel(id) {
-    let items = getStored(STORAGE_KEYS.SHOWREELS, [INITIAL_SHOWREEL]);
+    let items = getStored(STORAGE_KEYS.SHOWREELS, []);
     items = items.filter(s => s.id !== id);
     if (items.length > 0 && !items.some(s => s.is_active)) {
       items[0].is_active = true;
@@ -590,7 +488,7 @@ export const localStore = {
   resetToSeed() {
     setStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
     setStored(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
-    setStored(STORAGE_KEYS.SHOWREELS, [INITIAL_SHOWREEL]);
+    setStored(STORAGE_KEYS.SHOWREELS, []);
     setStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER);
     setStored(STORAGE_KEYS.ABOUT, INITIAL_ABOUT);
     setStored(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);

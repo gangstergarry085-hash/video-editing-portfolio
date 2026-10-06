@@ -8,81 +8,6 @@ import {
   HiOutlineAdjustmentsHorizontal,
 } from 'react-icons/hi2';
 
-const FALLBACK_PROJECTS = [
-  {
-    id: 'p-1',
-    slug: 'star-excellent-academy',
-    title: 'Star Excellent Academy Commercial',
-    category: 'Client Work',
-    client_name: 'Star Excellent Academy',
-    description:
-      'Star Excellent Academy commissioned a high-energy, contemporary commercial designed for multi-platform distribution across Instagram, YouTube, and digital outdoor displays. The edit required intense rhythmic pacing, audio beat-syncing, custom color grading to evoke an inspiring academic environment, and animated graphic callouts highlighting course offerings.',
-    short_description: 'High-impact promotional commercial featuring rhythmic pacing, kinetic typography, dynamic speed ramping, and pristine color grading.',
-    tools: ['DaVinci Resolve', 'After Effects', 'Premiere Pro', 'Fairlight Audio'],
-    services_provided: ['Commercial Editing', 'Motion Graphics', 'Color Grading', 'Sound Design'],
-    thumbnail_url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1600&q=80',
-    video_url: '',
-    project_year: 2024,
-    project_type: 'Commercial Ad',
-    dev_role: 'Lead Video Editor & Colorist',
-    client_description: 'Premier regional educational academy specializing in student transformation.',
-  },
-  {
-    id: 'p-2',
-    slug: 'neon-horizon-narrative',
-    title: 'Neon Horizon — Sci-Fi Narrative',
-    category: 'Client Work',
-    client_name: 'Aetheria Films',
-    description:
-      'A moody, futuristic narrative short set in a rain-drenched cyberpunk metropolis. Handled full timeline assembly, scene pacing, atmospheric sound design with Foley, and heavy colorist work matching neon highlights with deep cinematic blacks.',
-    short_description: 'Atmospheric neo-noir short film edit with multi-layer sound design and custom LUT color grading.',
-    tools: ['DaVinci Resolve Studio', 'Fairlight Audio', 'Fusion VFX'],
-    services_provided: ['Narrative Editing', 'Color Grading', 'Sound Design'],
-    thumbnail_url: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1600&q=80',
-    video_url: '',
-    project_year: 2024,
-    project_type: 'Short Film',
-    dev_role: 'Editor & Sound Designer',
-    client_description: 'Independent film studio producing elevated genre shorts.',
-  },
-  {
-    id: 'p-3',
-    slug: 'hyper-velocity-fashion',
-    title: 'Hyper Velocity — Fashion Campaign',
-    category: 'Client Work',
-    client_name: 'Vogue Lab Tokyo',
-    description:
-      'Fast-paced editorial fashion campaign featuring dynamic kinetic cuts, custom split screens, 35mm film halation emulation, and aggressive electronic soundtrack sync.',
-    short_description: 'Fast-paced editorial fashion reel synced to experimental audio beats.',
-    tools: ['Premiere Pro', 'After Effects', 'Photoshop'],
-    services_provided: ['Short-Form Cut', 'VFX Transitions', 'Audio Sync'],
-    thumbnail_url: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1600&q=80',
-    video_url: '',
-    project_year: 2024,
-    project_type: 'Fashion Editorial',
-    dev_role: 'Editor & Motion Designer',
-    client_description: 'High-fashion creative agency creating vanguard digital looks.',
-  },
-  {
-    id: 'p-4',
-    slug: 'echoes-of-iceland-doc',
-    title: 'Echoes of the North — Documentary',
-    category: 'Personal Experiment',
-    client_name: 'Independent',
-    description:
-      'Meditative travel documentary capturing remote volcanic landscapes. Focused on slow-burn editing rhythm, subtle ambient audio, and film stock emulation with authentic grain structure.',
-    short_description: 'Contemplative travel documentary exploring volcanic landscapes with slow-burn pacing.',
-    tools: ['DaVinci Resolve', 'Dehancer Pro'],
-    services_provided: ['Documentary Cut', 'Film Emulation'],
-    thumbnail_url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80',
-    video_url: '',
-    project_year: 2024,
-    project_type: 'Documentary',
-    dev_role: 'Director & Editor',
-    client_description: 'Personal creative exploration.',
-  },
-];
-
 const COLORIST_NODES = [
   { node: '01', name: 'Input CST', desc: 'Camera Sensor Log to DaVinci Wide Gamut Intermediate' },
   { node: '02', name: 'Exposure & Balance', desc: 'Photometric exposure offset & neutral grey balance' },
@@ -94,21 +19,35 @@ const COLORIST_NODES = [
 
 export default function ProjectDetailPage() {
   const { slug } = useParams();
-  // Instant 0ms initialization using fallback
-  const [project, setProject] = useState(() => {
-    return FALLBACK_PROJECTS.find((p) => p.slug === slug) || null;
-  });
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     projectsAPI
       .getBySlug(slug)
       .then(({ data }) => {
-        if (data) setProject(data);
+        const item = data?.project || data;
+        setProject(item || null);
       })
       .catch(() => {
-        // Fallback is already actively rendered
+        setProject(null);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center pt-20 px-6 text-center">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mb-4" />
+        <span className="text-xs font-mono text-text-muted uppercase tracking-wider">
+          RESOLVING TIMELINE CLIP...
+        </span>
+      </div>
+    );
+  }
 
   if (!project) {
     return (

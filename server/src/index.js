@@ -83,6 +83,13 @@ const apiLimiter = rateLimit({
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false, default: false },
+  keyGenerator: (req) => {
+    return req.headers['x-nf-client-connection-ip'] ||
+      (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0].trim() : '') ||
+      req.ip ||
+      '127.0.0.1';
+  },
   message: { error: 'Too many requests, please try again later.' },
 });
 app.use('/api', apiLimiter);

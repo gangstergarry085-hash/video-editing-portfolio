@@ -4,7 +4,7 @@ import { localStore } from './localStore';
 const customApiUrl = typeof window !== 'undefined' ? localStorage.getItem('dev_cms_custom_api_url') : null;
 
 const api = axios.create({
-  baseURL: customApiUrl || import.meta.env.VITE_API_URL || '/api',
+  baseURL: customApiUrl || (import.meta.env.PROD ? '/api' : (import.meta.env.VITE_API_URL || '/api')),
   withCredentials: true,
   timeout: 10000,
   headers: {

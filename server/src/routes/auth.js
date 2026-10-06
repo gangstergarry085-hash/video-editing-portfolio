@@ -12,7 +12,14 @@ const router = Router();
 // Rate limit login attempts (generous in development)
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 5 : 50,
+  max: process.env.NODE_ENV === 'production' ? 15 : 50,
+  validate: { xForwardedForHeader: false, default: false },
+  keyGenerator: (req) => {
+    return req.headers['x-nf-client-connection-ip'] ||
+      (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0].trim() : '') ||
+      req.ip ||
+      '127.0.0.1';
+  },
   message: { error: 'Too many login attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
