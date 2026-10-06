@@ -19,7 +19,9 @@ export default function DashboardPage() {
         projectsAPI.adminList({ sort: 'newest' }),
       ]);
       setStats(statsRes.data);
-      setRecentProjects(projectsRes.data.slice(0, 5));
+      const rawProjects = projectsRes?.data;
+      const projectsList = Array.isArray(rawProjects) ? rawProjects : (rawProjects?.projects || []);
+      setRecentProjects(projectsList.slice(0, 5));
     } catch {
       toast.error('Failed to load dashboard data');
     } finally {

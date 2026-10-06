@@ -65,8 +65,8 @@ app.use(cors({
     }
 
     if (
+      process.env.NODE_ENV !== 'production' ||
       allowedOrigins.includes(clean) ||
-      (process.env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(clean)) ||
       isNetlify
     ) {
       return callback(null, true);

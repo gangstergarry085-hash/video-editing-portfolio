@@ -34,7 +34,8 @@ export default function BeforeAfterPage() {
   async function loadItems() {
     try {
       const { data } = await beforeAfterAPI.adminList();
-      setItems(data);
+      const list = Array.isArray(data) ? data : (data?.items || []);
+      setItems(list);
     } catch {
       toast.error('Failed to load entries');
     } finally {

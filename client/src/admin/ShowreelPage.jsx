@@ -30,7 +30,8 @@ export default function ShowreelPage() {
   async function loadShowreels() {
     try {
       const { data } = await showreelAPI.adminList();
-      setShowreels(data);
+      const list = Array.isArray(data) ? data : (data?.showreels || []);
+      setShowreels(list);
     } catch {
       toast.error('Failed to load showreels');
     } finally {

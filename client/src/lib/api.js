@@ -12,13 +12,15 @@ const api = axios.create({
   },
 });
 
-// Helper to seamlessly fall back to client localStore if the backend is absent (e.g. on static GitHub Pages)
+// Helper to seamlessly fall back to client localStore if the backend is absent (e.g. on static hosting or offline)
 async function tryWithFallback(networkFn, fallbackFn) {
   try {
     return await networkFn();
   } catch (err) {
     const isOfflineOrStatic =
       !err.response ||
+      err.response.status === 401 ||
+      err.response.status === 403 ||
       err.response.status === 404 ||
       err.response.status === 502 ||
       err.response.status === 503 ||
@@ -61,8 +63,16 @@ export const projectsAPI = {
   // Public
   list: (params) =>
     tryWithFallback(
-      () => api.get('/projects', { params }),
-      () => localStore.getProjects(params)
+      async () => {
+        const res = await api.get('/projects', { params });
+        const list = Array.isArray(res.data) ? res.data : (res.data?.projects || []);
+        return { ...res, data: list };
+      },
+      async () => {
+        const res = await localStore.getProjects(params);
+        const list = Array.isArray(res.data) ? res.data : (res.data?.projects || []);
+        return { data: list };
+      }
     ),
   getBySlug: (slug) =>
     tryWithFallback(
@@ -73,8 +83,16 @@ export const projectsAPI = {
   // Admin
   adminList: (params) =>
     tryWithFallback(
-      () => api.get('/projects/admin/all', { params }),
-      () => localStore.getProjects(params)
+      async () => {
+        const res = await api.get('/projects/admin/all', { params });
+        const list = Array.isArray(res.data) ? res.data : (res.data?.projects || []);
+        return { ...res, data: list };
+      },
+      async () => {
+        const res = await localStore.getProjects(params);
+        const list = Array.isArray(res.data) ? res.data : (res.data?.projects || []);
+        return { data: list };
+      }
     ),
   adminStats: () =>
     tryWithFallback(
@@ -137,13 +155,29 @@ export const projectsAPI = {
 export const beforeAfterAPI = {
   list: () =>
     tryWithFallback(
-      () => api.get('/before-after'),
-      () => localStore.getBeforeAfter()
+      async () => {
+        const res = await api.get('/before-after');
+        const list = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+        return { ...res, data: list };
+      },
+      async () => {
+        const res = await localStore.getBeforeAfter();
+        const list = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+        return { data: list };
+      }
     ),
   adminList: () =>
     tryWithFallback(
-      () => api.get('/before-after/admin/all'),
-      () => localStore.getBeforeAfter()
+      async () => {
+        const res = await api.get('/before-after/admin/all');
+        const list = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+        return { ...res, data: list };
+      },
+      async () => {
+        const res = await localStore.getBeforeAfter();
+        const list = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+        return { data: list };
+      }
     ),
   create: (data) =>
     tryWithFallback(
@@ -187,8 +221,16 @@ export const showreelAPI = {
     ),
   adminList: () =>
     tryWithFallback(
-      () => api.get('/showreel/admin/all'),
-      () => localStore.getShowreels()
+      async () => {
+        const res = await api.get('/showreel/admin/all');
+        const list = Array.isArray(res.data) ? res.data : (res.data?.showreels || []);
+        return { ...res, data: list };
+      },
+      async () => {
+        const res = await localStore.getShowreels();
+        const list = Array.isArray(res.data) ? res.data : (res.data?.showreels || []);
+        return { data: list };
+      }
     ),
   create: (data) =>
     tryWithFallback(
@@ -211,13 +253,29 @@ export const showreelAPI = {
 export const servicesAPI = {
   list: () =>
     tryWithFallback(
-      () => api.get('/services'),
-      () => localStore.getServices()
+      async () => {
+        const res = await api.get('/services');
+        const list = Array.isArray(res.data) ? res.data : (res.data?.services || []);
+        return { ...res, data: list };
+      },
+      async () => {
+        const res = await localStore.getServices();
+        const list = Array.isArray(res.data) ? res.data : (res.data?.services || []);
+        return { data: list };
+      }
     ),
   adminList: () =>
     tryWithFallback(
-      () => api.get('/services/admin/all'),
-      () => localStore.getServices()
+      async () => {
+        const res = await api.get('/services/admin/all');
+        const list = Array.isArray(res.data) ? res.data : (res.data?.services || []);
+        return { ...res, data: list };
+      },
+      async () => {
+        const res = await localStore.getServices();
+        const list = Array.isArray(res.data) ? res.data : (res.data?.services || []);
+        return { data: list };
+      }
     ),
   create: (data) =>
     tryWithFallback(
@@ -284,8 +342,16 @@ export const settingsAPI = {
 export const mediaAPI = {
   list: (params) =>
     tryWithFallback(
-      () => api.get('/media', { params }),
-      () => localStore.getMedia()
+      async () => {
+        const res = await api.get('/media', { params });
+        const list = Array.isArray(res.data) ? res.data : (res.data?.media || []);
+        return { ...res, data: list };
+      },
+      async () => {
+        const res = await localStore.getMedia();
+        const list = Array.isArray(res.data) ? res.data : (res.data?.media || []);
+        return { data: list };
+      }
     ),
   upload: (file, onProgress) =>
     tryWithFallback(

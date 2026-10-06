@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, Navigate, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import ErrorBoundary from '../components/ErrorBoundary';
 import {
   HiOutlineViewGrid, HiOutlineFilm, HiOutlinePhotograph,
   HiOutlineCog, HiOutlineLogout, HiOutlineExternalLink,
@@ -151,7 +152,9 @@ export default function AdminLayout() {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-6 lg:p-8">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import ScrollToTop from './components/ScrollToTop';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Public core pages (eager loaded for instant first paint)
 import PublicLayout from './pages/PublicLayout';
@@ -59,33 +60,35 @@ function App() {
     <AuthProvider>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <ScrollToTop />
-        <Suspense fallback={<RouteLoader />}>
-          <Routes>
-            {/* Public routes */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/project/:slug" element={<ProjectDetailPage />} />
-            </Route>
+        <ErrorBoundary>
+          <Suspense fallback={<RouteLoader />}>
+            <Routes>
+              {/* Public routes */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/project/:slug" element={<ProjectDetailPage />} />
+              </Route>
 
-            {/* Admin routes */}
-            <Route path="/admin/login" element={<LoginPage />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<DashboardPage />} />
-              <Route path="projects" element={<ProjectsListPage />} />
-              <Route path="projects/new" element={<ProjectFormPage />} />
-              <Route path="projects/:id/edit" element={<ProjectFormPage />} />
-              <Route path="before-after" element={<BeforeAfterPage />} />
-              <Route path="showreel" element={<ShowreelPage />} />
-              <Route path="services" element={<ServicesPage />} />
-              <Route path="about" element={<AboutPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="media" element={<MediaLibraryPage />} />
-            </Route>
+              {/* Admin routes */}
+              <Route path="/admin/login" element={<LoginPage />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<DashboardPage />} />
+                <Route path="projects" element={<ProjectsListPage />} />
+                <Route path="projects/new" element={<ProjectFormPage />} />
+                <Route path="projects/:id/edit" element={<ProjectFormPage />} />
+                <Route path="before-after" element={<BeforeAfterPage />} />
+                <Route path="showreel" element={<ShowreelPage />} />
+                <Route path="services" element={<ServicesPage />} />
+                <Route path="about" element={<AboutPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="media" element={<MediaLibraryPage />} />
+              </Route>
 
-            {/* Catch-all */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+              {/* Catch-all */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
 
         <Toaster
           position="top-right"

@@ -25,7 +25,8 @@ export default function MediaLibraryPage() {
       if (search) params.search = search;
       if (typeFilter) params.type = typeFilter;
       const { data } = await mediaAPI.list(params);
-      setMedia(data);
+      const list = Array.isArray(data) ? data : (data?.media || []);
+      setMedia(list);
     } catch {
       toast.error('Failed to load media');
     } finally {

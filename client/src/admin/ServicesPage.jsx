@@ -23,7 +23,8 @@ export default function ServicesPage() {
   async function loadServices() {
     try {
       const { data } = await servicesAPI.adminList();
-      setServices(data);
+      const list = Array.isArray(data) ? data : (data?.services || []);
+      setServices(list);
     } catch {
       toast.error('Failed to load services');
     } finally {

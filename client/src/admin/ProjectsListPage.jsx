@@ -32,7 +32,8 @@ export default function ProjectsListPage() {
       if (sort === 'newest') params.sort = 'newest';
 
       const { data } = await projectsAPI.adminList(params);
-      setProjects(data);
+      const list = Array.isArray(data) ? data : (data?.projects || []);
+      setProjects(list);
     } catch {
       toast.error('Failed to load projects');
     } finally {
