@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
 import {
   projectsAPI, showreelAPI, beforeAfterAPI,
   servicesAPI, aboutAPI,
@@ -20,7 +19,6 @@ import {
   HiOutlineBolt,
   HiOutlineMusicalNote,
   HiOutlineVideoCamera,
-  HiOutlinePlus,
 } from 'react-icons/hi2';
 
 // ── Animation Variants ──────────────────────────────────
@@ -94,7 +92,6 @@ const FALLBACK_PROCESS = [
 ];
 
 export default function HomePage() {
-  const { user } = useAuth();
   const context = useOutletContext() || {};
   const settings = context.settings;
   const [loading, setLoading] = useState(true);
@@ -491,23 +488,13 @@ export default function HomePage() {
                 : 'No projects match this category. Select another genre or view all works.'}
             </p>
 
-            {user ? (
-              <Link
-                to="/admin/projects/new"
-                className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full text-xs font-mono font-bold tracking-wider bg-accent text-surface hover:bg-accent-hover transition-all shadow-lg shadow-accent/20"
-              >
-                <HiOutlinePlus className="w-4 h-4" />
-                <span>ADD NEW PROJECT (ADMIN)</span>
-              </Link>
-            ) : (
-              <a
-                href="#contact"
-                className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-mono font-medium tracking-wider border border-border hover:border-accent/50 text-text-secondary hover:text-text-primary transition-all glass hover:bg-surface-elevated"
-              >
-                <span>INQUIRE FOR PRIVATE REELS</span>
-                <HiOutlineArrowRight className="w-3.5 h-3.5 text-accent" />
-              </a>
-            )}
+            <a
+              href="#contact"
+              className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-mono font-medium tracking-wider border border-border hover:border-accent/50 text-text-secondary hover:text-text-primary transition-all glass hover:bg-surface-elevated cursor-pointer"
+            >
+              <span>INQUIRE FOR PRIVATE REELS</span>
+              <HiOutlineArrowRight className="w-3.5 h-3.5 text-accent" />
+            </a>
           </div>
         ) : (
           <motion.div variants={stagger} className="grid grid-cols-1 md:grid-cols-2 gap-8">
