@@ -5,7 +5,7 @@ import VideoPlayer from '../components/VideoPlayer';
 import {
   HiOutlineUpload, HiOutlineTrash, HiOutlineSearch,
   HiOutlinePhotograph, HiOutlineFilm, HiOutlineClipboardCopy,
-  HiOutlineExternalLink, HiOutlineX,
+  HiOutlineExternalLink, HiOutlineX, HiOutlineLink,
 } from 'react-icons/hi';
 
 export default function MediaLibraryPage() {
@@ -18,6 +18,10 @@ export default function MediaLibraryPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleteWarning, setDeleteWarning] = useState(null);
   const [previewMedia, setPreviewMedia] = useState(null);
+  const [showUrlModal, setShowUrlModal] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [nameInput, setNameInput] = useState('');
+  const [addingUrl, setAddingUrl] = useState(false);
 
   const loadMedia = useCallback(async () => {
     try {
@@ -56,6 +60,24 @@ export default function MediaLibraryPage() {
     }
   }
 
+  async function handleAddUrl(e) {
+    e.preventDefault();
+    if (!urlInput.trim()) return toast.error('Please enter a valid URL');
+    setAddingUrl(true);
+    try {
+      await mediaAPI.addUrl({ url: urlInput.trim(), name: nameInput.trim() });
+      toast.success('Asset URL added successfully');
+      setUrlInput('');
+      setNameInput('');
+      setShowUrlModal(false);
+      await loadMedia();
+    } catch {
+      toast.error('Failed to add asset URL');
+    } finally {
+      setAddingUrl(false);
+    }
+  }
+
   async function handleDelete(id, force = false) {
     try {
       await mediaAPI.delete(id, force);
@@ -85,8 +107,13 @@ export default function MediaLibraryPage() {
     return `${(bytes / 1048576).toFixed(1)} MB`;
   }
 
-  function isImage(mime) {
-    return mime?.startsWith('image/');
+  function isImage(itemOrMime) {
+    if (!itemOrMime) return false;
+    if (typeof itemOrMime === 'string') return itemOrMime.startsWith('image/');
+    const mime = itemOrMime.mime_type || itemOrMime.type || '';
+    if (mime.startsWith('image/')) return true;
+    const url = itemOrMime.url || '';
+    return /\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(url);
   }
 
   return (
@@ -96,17 +123,27 @@ export default function MediaLibraryPage() {
           <h1 className="text-2xl font-display font-bold text-text-primary">Media Library</h1>
           <p className="text-text-muted text-sm mt-1">{media.length} asset{media.length !== 1 ? 's' : ''} stored</p>
         </div>
-        <label className="admin-btn-primary cursor-pointer">
-          <HiOutlineUpload className="w-4 h-4" />
-          {uploading ? `Uploading ${uploadProgress}%` : 'Upload New File'}
-          <input
-            type="file"
-            className="hidden"
-            accept="video/*,image/*"
-            onChange={handleUpload}
-            disabled={uploading}
-          />
-        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowUrlModal(true)}
+            className="admin-btn-secondary"
+          >
+            <HiOutlineLink className="w-4 h-4 text-accent" />
+            Add Video/Image URL
+          </button>
+          <label className="admin-btn-primary cursor-pointer">
+            <HiOutlineUpload className="w-4 h-4" />
+            {uploading ? `Uploading ${uploadProgress}%` : 'Upload Local File'}
+            <input
+              type="file"
+              className="hidden"
+              accept="video/*,image/*"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+          </label>
+        </div>
       </div>
 
       {/* Upload progress */}
@@ -297,6 +334,73 @@ export default function MediaLibraryPage() {
               <button onClick={() => handleDelete(deleteWarning.id, true)} className="admin-btn-danger">Delete Anyway</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Add by URL Modal */}
+      {showUrlModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleAddUrl} className="admin-card max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <HiOutlineLink className="w-5 h-5 text-accent" />
+                <h3 className="text-base font-semibold text-text-primary">Add Asset via URL</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowUrlModal(false)}
+                className="p-1 rounded-lg text-text-muted hover:text-text-primary"
+              >
+                <HiOutlineX className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-text-muted">
+              Add any YouTube, Vimeo, direct MP4, or image link (Cloudinary, GitHub Release, Unsplash, etc.) without upload limits.
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="admin-label">Asset Title / Description</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Cinematic Commercial Cut, Nike Spec Ad"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  className="admin-input"
+                />
+              </div>
+
+              <div>
+                <label className="admin-label">Direct Video or Image URL *</label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://youtu.be/... or https://.../video.mp4 or https://.../image.jpg"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  className="admin-input"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setShowUrlModal(false)}
+                className="admin-btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={addingUrl}
+                className="admin-btn-primary"
+              >
+                {addingUrl ? 'Adding...' : 'Add to Library'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

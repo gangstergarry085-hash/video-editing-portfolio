@@ -348,7 +348,7 @@ export const mediaAPI = {
         return { ...res, data: list };
       },
       async () => {
-        const res = await localStore.getMedia();
+        const res = await localStore.getMedia(params);
         const list = Array.isArray(res.data) ? res.data : (res.data?.media || []);
         return { data: list };
       }
@@ -367,6 +367,11 @@ export const mediaAPI = {
         });
       },
       () => localStore.uploadMedia(file)
+    ),
+  addUrl: (data) =>
+    tryWithFallback(
+      () => api.post('/media/url', data),
+      () => localStore.addMediaUrl(data)
     ),
   delete: (id, force = false) =>
     tryWithFallback(

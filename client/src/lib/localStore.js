@@ -37,6 +37,78 @@ const INITIAL_SERVICES = [
 const INITIAL_SHOWREEL = null;
 
 const INITIAL_BEFORE_AFTER = [];
+const INITIAL_MEDIA = [];
+
+// ── IndexedDB Engine for Large Media (Videos, Audio, High-Res Images) ──
+const IDB_NAME = 'DevAnandPortfolioMediaDB';
+const IDB_STORE = 'media_assets';
+
+function openIDB() {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !window.indexedDB) return resolve(null);
+    try {
+      const req = window.indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = (e) => resolve(e.target.result);
+      req.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function idbGetMediaList() {
+  const db = await openIDB();
+  if (!db) return null;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function idbSaveMedia(item) {
+  const db = await openIDB();
+  if (!db) return false;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      const store = tx.objectStore(IDB_STORE);
+      store.put(item);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
+async function idbDeleteMedia(id) {
+  const db = await openIDB();
+  if (!db) return false;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      const store = tx.objectStore(IDB_STORE);
+      store.delete(id);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    } catch {
+      resolve(false);
+    }
+  });
+}
 
 const INITIAL_ABOUT = {
   name: 'Dev Anand',
@@ -78,8 +150,6 @@ const INITIAL_SETTINGS = {
     { step: 6, title: 'Final Delivery', description: 'Export in all required formats, revisions, and handoff.' },
   ],
 };
-
-const INITIAL_MEDIA = [];
 
 function getStored(key, fallback) {
   try {
@@ -422,37 +492,125 @@ export const localStore = {
   },
 
   // ── Media Library ─────────────────────
-  getMedia() {
-    const media = getStored(STORAGE_KEYS.MEDIA, INITIAL_MEDIA);
-    return Promise.resolve({ data: { media } });
+  async getMedia(params = {}) {
+    let list = [];
+    const idbList = await idbGetMediaList();
+    if (idbList && idbList.length > 0) {
+      list = idbList.map((item) => {
+        if (item.blob && (!item.url || item.url.startsWith('blob:'))) {
+          try {
+            item.url = URL.createObjectURL(item.blob);
+          } catch {
+            // keep existing url
+          }
+        }
+        return item;
+      });
+      list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    } else {
+      list = getStored(STORAGE_KEYS.MEDIA, []);
+    }
+
+    if (params?.type) {
+      list = list.filter((m) => (m.mime_type || m.type || '').startsWith(params.type));
+    }
+    if (params?.search) {
+      const q = params.search.toLowerCase();
+      list = list.filter((m) =>
+        (m.original_name || m.filename || '').toLowerCase().includes(q)
+      );
+    }
+
+    return { data: list, media: list };
   },
 
-  uploadMedia(file) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const media = getStored(STORAGE_KEYS.MEDIA, INITIAL_MEDIA);
-        const newMedia = {
-          id: 'm-' + Date.now(),
-          filename: file.name,
-          url: e.target.result,
-          type: file.type,
-          size: file.size,
-          created_at: new Date().toISOString(),
-        };
-        media.unshift(newMedia);
-        setStored(STORAGE_KEYS.MEDIA, media);
-        resolve({ data: { media: newMedia } });
-      };
-      reader.readAsDataURL(file);
-    });
+  async uploadMedia(file) {
+    const id = 'm-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+    const objectUrl = URL.createObjectURL(file);
+    const mimeType = file.type || (file.name.endsWith('.mp4') ? 'video/mp4' : 'application/octet-stream');
+
+    const newMedia = {
+      id,
+      filename: file.name,
+      original_name: file.name,
+      mime_type: mimeType,
+      type: mimeType,
+      size: file.size,
+      created_at: new Date().toISOString(),
+      url: objectUrl,
+      blob: file, // Natively stored in IndexedDB without 5MB quota restrictions
+    };
+
+    // Save to IndexedDB (supports videos of all sizes)
+    await idbSaveMedia(newMedia);
+
+    // Save lightweight metadata in localStorage (without large binary blob)
+    try {
+      const stored = getStored(STORAGE_KEYS.MEDIA, []);
+      const metaOnly = { ...newMedia };
+      delete metaOnly.blob;
+      const updated = [metaOnly, ...stored.filter((x) => x.id !== id)].slice(0, 50);
+      setStored(STORAGE_KEYS.MEDIA, updated);
+    } catch {
+      // ignore localStorage quota warnings
+    }
+
+    return {
+      data: {
+        ...newMedia,
+        url: objectUrl,
+        media: newMedia,
+      },
+    };
   },
 
-  deleteMedia(id) {
-    let media = getStored(STORAGE_KEYS.MEDIA, INITIAL_MEDIA);
-    media = media.filter(m => m.id !== id);
+  async addMediaUrl({ url, name, mimeType }) {
+    const id = 'm-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+    const trimmed = (url || '').trim();
+    const isVideo = mimeType?.startsWith('video/') ||
+      trimmed.includes('youtube') ||
+      trimmed.includes('youtu.be') ||
+      trimmed.includes('vimeo') ||
+      trimmed.match(/\.(mp4|webm|mov|m4v)(\?.*)?$/i);
+
+    const detectedMime = mimeType || (isVideo ? 'video/mp4' : 'image/jpeg');
+
+    const newMedia = {
+      id,
+      filename: name?.trim() || (isVideo ? 'External Video' : 'External Image'),
+      original_name: name?.trim() || (isVideo ? 'External Video' : 'External Image'),
+      mime_type: detectedMime,
+      type: detectedMime,
+      size: 0,
+      created_at: new Date().toISOString(),
+      url: trimmed,
+    };
+
+    await idbSaveMedia(newMedia);
+
+    try {
+      const stored = getStored(STORAGE_KEYS.MEDIA, []);
+      const updated = [newMedia, ...stored.filter((x) => x.id !== id)].slice(0, 50);
+      setStored(STORAGE_KEYS.MEDIA, updated);
+    } catch {
+      // ignore
+    }
+
+    return {
+      data: {
+        ...newMedia,
+        url: trimmed,
+        media: newMedia,
+      },
+    };
+  },
+
+  async deleteMedia(id) {
+    await idbDeleteMedia(id);
+    let media = getStored(STORAGE_KEYS.MEDIA, []);
+    media = media.filter((m) => m.id !== id);
     setStored(STORAGE_KEYS.MEDIA, media);
-    return Promise.resolve({ data: { message: 'Media removed' } });
+    return { data: { message: 'Media removed' } };
   },
 
   // ── Import / Export Utilities ─────────
