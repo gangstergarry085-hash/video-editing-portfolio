@@ -22,22 +22,45 @@ const DEFAULT_ADMIN = {
 
 const DEFAULT_PASSWORD = 'garry@2004';
 
-const INITIAL_PROJECTS = [];
+import bakedData from '../data/portfolioData.json';
 
-const INITIAL_SERVICES = [
-  { id: 's-1', name: 'Short-form Content', description: 'Reels, TikToks, and Shorts engineered for high viewer retention, pacing, and viral engagement.', display_order: 0, published: true },
-  { id: 's-2', name: 'YouTube Editing', description: 'Comprehensive YouTube video editing — hook pacing, storytelling cuts, kinetic graphics, and thumb-stopping visual cues.', display_order: 1, published: true },
-  { id: 's-3', name: 'Motion Graphics', description: 'Custom animated titles, kinetic typography, lower thirds, 3D logo resolves, and visual effects.', display_order: 2, published: true },
-  { id: 's-4', name: 'Cinematic Editing', description: 'Film-grade narrative rhythm, pacing, and dramatic tension tailored for commercials and short films.', display_order: 3, published: true },
-  { id: 's-5', name: 'Brand & Commercial Videos', description: 'High-production promotional campaigns for brands, digital agencies, and product launches.', display_order: 4, published: true },
-  { id: 's-6', name: 'Color Grading', description: 'Color correction, film print emulation, color harmony, and custom mood grading in DaVinci Resolve.', display_order: 5, published: true },
-  { id: 's-7', name: 'Sound Design & Mixing', description: 'Multi-layer foley, riser/whoosh impacts, music timing, and broadcast-ready audio mastering.', display_order: 6, published: true },
-];
+const INITIAL_PROJECTS = Array.isArray(bakedData.projects) ? bakedData.projects : [];
 
-const INITIAL_SHOWREEL = null;
+const INITIAL_SERVICES = Array.isArray(bakedData.services) && bakedData.services.length > 0
+  ? bakedData.services
+  : [
+      { id: 's-1', name: 'Short-form Content', description: 'Reels, TikToks, and Shorts engineered for high viewer retention, pacing, and viral engagement.', display_order: 0, published: true },
+      { id: 's-2', name: 'YouTube Editing', description: 'Comprehensive YouTube video editing — hook pacing, storytelling cuts, kinetic graphics, and thumb-stopping visual cues.', display_order: 1, published: true },
+      { id: 's-3', name: 'Motion Graphics', description: 'Custom animated titles, kinetic typography, lower thirds, 3D logo resolves, and visual effects.', display_order: 2, published: true },
+      { id: 's-4', name: 'Cinematic Editing', description: 'Film-grade narrative rhythm, pacing, and dramatic tension tailored for commercials and short films.', display_order: 3, published: true },
+      { id: 's-5', name: 'Brand & Commercial Videos', description: 'High-production promotional campaigns for brands, digital agencies, and product launches.', display_order: 4, published: true },
+      { id: 's-6', name: 'Color Grading', description: 'Color correction, film print emulation, color harmony, and custom mood grading in DaVinci Resolve.', display_order: 5, published: true },
+      { id: 's-7', name: 'Sound Design & Mixing', description: 'Multi-layer foley, riser/whoosh impacts, music timing, and broadcast-ready audio mastering.', display_order: 6, published: true },
+    ];
 
-const INITIAL_BEFORE_AFTER = [];
-const INITIAL_MEDIA = [];
+const INITIAL_SHOWREEL_DEFAULT = {
+  id: 'sr-1',
+  title: 'The 2024 Reel',
+  description: 'A 60-second compilation of high-impact commercial cuts, dynamic kinetic typography, and editorial color science.',
+  video_url: '',
+  videoUrl: '',
+  thumbnail_url: '',
+  thumbnailUrl: '',
+  is_active: true,
+  active: true,
+  aspect_ratio: '16:9',
+  aspectRatio: '16:9',
+  created_at: new Date().toISOString(),
+};
+
+const INITIAL_SHOWREELS = Array.isArray(bakedData.showreels) && bakedData.showreels.length > 0
+  ? bakedData.showreels
+  : (bakedData.showreel ? [bakedData.showreel] : [INITIAL_SHOWREEL_DEFAULT]);
+
+const INITIAL_SHOWREEL = INITIAL_SHOWREELS[0] || INITIAL_SHOWREEL_DEFAULT;
+
+const INITIAL_BEFORE_AFTER = Array.isArray(bakedData.beforeAfter) ? bakedData.beforeAfter : [];
+const INITIAL_MEDIA = Array.isArray(bakedData.media) ? bakedData.media : [];
 
 // ── IndexedDB Engine for Large Media (Videos, Audio, High-Res Images) ──
 const IDB_NAME = 'DevAnandPortfolioMediaDB';
@@ -110,7 +133,9 @@ async function idbDeleteMedia(id) {
   });
 }
 
-const INITIAL_ABOUT = {
+const INITIAL_ABOUT = (bakedData.about && Object.keys(bakedData.about).length > 0)
+  ? bakedData.about
+  : {
   name: 'Dev Anand',
   role: 'Video Editor & Motion Graphics Designer',
   bio: "I'm Dev Anand — a video editor and motion graphics designer with a passion for cinematic storytelling. I believe every frame should earn its place in the timeline. From raw footage to polished final cuts, I bring stories to life through precise editing, dynamic motion graphics, and thoughtful sound design.",
@@ -130,7 +155,9 @@ const INITIAL_ABOUT = {
   ],
 };
 
-const INITIAL_SETTINGS = {
+const INITIAL_SETTINGS = (bakedData.settings && Object.keys(bakedData.settings).length > 0)
+  ? bakedData.settings
+  : {
   site_title: 'Dev Anand — Video Editor',
   hero_heading: 'DEV ANAND',
   hero_subheading: 'VIDEO EDITOR · MOTION DESIGNER · VISUAL STORYTELLER',
@@ -154,7 +181,12 @@ const INITIAL_SETTINGS = {
 function getStored(key, fallback) {
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : fallback;
+    if (!item) return fallback;
+    const parsed = JSON.parse(item);
+    if (Array.isArray(parsed) && parsed.length === 0 && Array.isArray(fallback) && fallback.length > 0) {
+      return fallback;
+    }
+    return parsed;
   } catch {
     return fallback;
   }
@@ -166,6 +198,189 @@ function setStored(key, value) {
   } catch (err) {
     console.warn(`[LocalStore] Could not persist key ${key}:`, err);
   }
+}
+
+// ── Data Normalizers (Bridges camelCase forms with snake_case display models) ──
+function normalizeProject(p) {
+  if (!p || typeof p !== 'object') return p;
+  const videoUrl = p.video_url || p.videoUrl || '';
+  const thumbnailUrl = p.thumbnail_url || p.thumbnailUrl || '';
+  const mobileVideoUrl = p.mobile_video_url || p.mobileVideoUrl || '';
+  const shortDesc = p.short_description || p.shortDescription || '';
+  const clientName = p.client_name || p.clientName || '';
+  const clientDesc = p.client_description || p.clientDescription || '';
+  const devRole = p.dev_role || p.devRole || '';
+  const services = Array.isArray(p.services_provided) ? p.services_provided : (Array.isArray(p.servicesProvided) ? p.servicesProvided : []);
+  const tools = Array.isArray(p.tools) ? p.tools : [];
+  const projectYear = p.project_year || p.projectYear || new Date().getFullYear();
+  const projectType = p.project_type || p.projectType || '';
+
+  return {
+    ...p,
+    video_url: videoUrl,
+    videoUrl: videoUrl,
+    thumbnail_url: thumbnailUrl,
+    thumbnailUrl: thumbnailUrl,
+    mobile_video_url: mobileVideoUrl,
+    mobileVideoUrl: mobileVideoUrl,
+    short_description: shortDesc,
+    shortDescription: shortDesc,
+    client_name: clientName,
+    clientName: clientName,
+    client_description: clientDesc,
+    clientDescription: clientDesc,
+    dev_role: devRole,
+    devRole: devRole,
+    services_provided: services,
+    servicesProvided: services,
+    tools,
+    project_year: projectYear,
+    projectYear: projectYear,
+    project_type: projectType,
+    projectType: projectType,
+  };
+}
+
+function normalizeSettings(s) {
+  if (!s || typeof s !== 'object') return s;
+  const siteTitle = s.site_title || s.siteTitle || 'Dev Anand — Video Editor & Motion Designer';
+  const heroHeading = s.hero_heading || s.heroHeading || 'DEV ANAND';
+  const heroSubheading = s.hero_subheading || s.heroSubheading || 'VIDEO EDITOR · MOTION DESIGNER · VISUAL STORYTELLER';
+  const heroStatement = s.hero_statement || s.heroStatement || 'YOU WATCH. / I EDIT.';
+  const avail = s.availability_status || s.availabilityStatus || 'Available for Projects';
+  const accent = s.accent_color || s.accentColor || '#E50914';
+  const email = s.email || 'admin@devanand.com';
+  const footer = s.footer_text || s.footerText || '© Dev Anand. All rights reserved.';
+  const metaTitle = s.meta_title || s.metaTitle || 'Dev Anand — Video Editor & Motion Designer';
+  const metaDesc = s.meta_description || s.metaDescription || '';
+  const ogImg = s.og_image_url || s.ogImageUrl || '';
+  const contactHead = s.contact_heading || s.contactHeading || 'Ready to Cut Your Next Masterpiece?';
+  const contactSub = s.contact_subheading || s.contactSubheading || '';
+  const socialLinks = typeof s.social_links === 'object' && s.social_links !== null ? s.social_links : (typeof s.socialLinks === 'object' && s.socialLinks !== null ? s.socialLinks : {});
+  const processSteps = Array.isArray(s.process_steps) ? s.process_steps : (Array.isArray(s.processSteps) ? s.processSteps : []);
+
+  return {
+    ...s,
+    site_title: siteTitle,
+    siteTitle: siteTitle,
+    hero_heading: heroHeading,
+    heroHeading: heroHeading,
+    hero_subheading: heroSubheading,
+    heroSubheading: heroSubheading,
+    hero_statement: heroStatement,
+    heroStatement: heroStatement,
+    availability_status: avail,
+    availabilityStatus: avail,
+    accent_color: accent,
+    accentColor: accent,
+    email,
+    social_links: socialLinks,
+    socialLinks,
+    footer_text: footer,
+    footerText: footer,
+    meta_title: metaTitle,
+    metaTitle: metaTitle,
+    meta_description: metaDesc,
+    metaDescription: metaDesc,
+    og_image_url: ogImg,
+    ogImageUrl: ogImg,
+    contact_heading: contactHead,
+    contactHeading: contactHead,
+    contact_subheading: contactSub,
+    contactSubheading: contactSub,
+    process_steps: processSteps,
+    processSteps,
+  };
+}
+
+function normalizeAbout(a) {
+  if (!a || typeof a !== 'object') return a;
+  const name = a.name || 'Dev Anand';
+  const role = a.role || 'Video Editor & Motion Graphics Designer';
+  const bio = a.bio || '';
+  const experience = a.experience || '~1 Year';
+  const location = a.location || 'India';
+  const avail = a.availability_status || a.availabilityStatus || 'Available for Projects';
+  const profileImg = a.profile_image_url || a.profileImageUrl || a.avatar_url || a.avatarUrl || '';
+  const deliveries = a.deliveries_stat || a.deliveriesStat || '';
+  const resolution = a.resolution_stat || a.resolutionStat || '';
+  const tools = Array.isArray(a.tools) ? a.tools : [];
+  const social = Array.isArray(a.social_links) ? a.social_links : (Array.isArray(a.socialLinks) ? a.socialLinks : []);
+
+  return {
+    ...a,
+    name,
+    role,
+    bio,
+    experience,
+    location,
+    availability_status: avail,
+    availabilityStatus: avail,
+    profile_image_url: profileImg,
+    profileImageUrl: profileImg,
+    avatar_url: profileImg,
+    avatarUrl: profileImg,
+    deliveries_stat: deliveries,
+    deliveriesStat: deliveries,
+    resolution_stat: resolution,
+    resolutionStat: resolution,
+    tools,
+    social_links: social,
+    socialLinks: social,
+  };
+}
+
+function normalizeShowreel(sr) {
+  if (!sr || typeof sr !== 'object') return sr;
+  const videoUrl = sr.video_url || sr.videoUrl || '';
+  const thumbnailUrl = sr.thumbnail_url || sr.thumbnailUrl || '';
+  const isActive = Boolean(sr.is_active ?? sr.active ?? true);
+  const title = sr.title || 'The 2024 Reel';
+  const desc = sr.description || 'A 60-second compilation of high-impact commercial cuts, dynamic kinetic typography, and editorial color science.';
+  const aspect = sr.aspect_ratio || sr.aspectRatio || '16:9';
+  return {
+    ...sr,
+    title,
+    description: desc,
+    video_url: videoUrl,
+    videoUrl: videoUrl,
+    thumbnail_url: thumbnailUrl,
+    thumbnailUrl: thumbnailUrl,
+    is_active: isActive,
+    active: isActive,
+    aspect_ratio: aspect,
+    aspectRatio: aspect,
+  };
+}
+
+function normalizeBeforeAfter(ba) {
+  if (!ba || typeof ba !== 'object') return ba;
+  const rawUrl = ba.raw_media_url || ba.rawMediaUrl || '';
+  const finalUrl = ba.final_media_url || ba.finalMediaUrl || '';
+  const thumbUrl = ba.thumbnail_url || ba.thumbnailUrl || '';
+  const isPub = ba.published !== undefined ? Boolean(ba.published) : true;
+  return {
+    ...ba,
+    raw_media_url: rawUrl,
+    rawMediaUrl: rawUrl,
+    final_media_url: finalUrl,
+    finalMediaUrl: finalUrl,
+    thumbnail_url: thumbUrl,
+    thumbnailUrl: thumbUrl,
+    published: isPub,
+  };
+}
+
+function normalizeService(s) {
+  if (!s || typeof s !== 'object') return s;
+  return {
+    ...s,
+    name: s.name || '',
+    description: s.description || '',
+    published: s.published !== undefined ? Boolean(s.published) : true,
+    display_order: s.display_order ?? s.displayOrder ?? 0,
+    displayOrder: s.display_order ?? s.displayOrder ?? 0,
+  };
 }
 
 // ── Standalone Local Store API ────────────────────────────
@@ -221,7 +436,8 @@ export const localStore = {
 
   // ── Projects ──────────────────────────
   getProjects(params = {}) {
-    let items = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    let raw = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    let items = (Array.isArray(raw) ? raw : []).map(normalizeProject);
     if (params.category && params.category !== 'All') {
       items = items.filter(p => p.category === params.category);
     }
@@ -229,74 +445,92 @@ export const localStore = {
       items = items.filter(p => p.published);
     }
     items.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
-    return Promise.resolve({ data: { projects: items } });
+    return Promise.resolve({ data: items, projects: items });
   },
 
   getProjectBySlug(slug) {
-    const items = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const raw = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const items = (Array.isArray(raw) ? raw : []).map(normalizeProject);
     const item = items.find(p => p.slug === slug);
     if (!item) return Promise.reject({ response: { status: 404, data: { error: 'Project not found' } } });
-    return Promise.resolve({ data: { project: item } });
+    return Promise.resolve({ data: { ...item, project: item } });
   },
 
   getProjectById(id) {
-    const items = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
-    const item = items.find(p => p.id === id);
+    const raw = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const items = (Array.isArray(raw) ? raw : []).map(normalizeProject);
+    const item = items.find(p => String(p.id) === String(id));
     if (!item) return Promise.reject({ response: { status: 404, data: { error: 'Project not found' } } });
-    return Promise.resolve({ data: { project: item } });
+    return Promise.resolve({ data: { ...item, project: item } });
   },
 
   createProject(data) {
-    const items = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
-    const newProject = {
+    const raw = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const items = Array.isArray(raw) ? raw : [];
+    const normalized = normalizeProject({
       ...data,
       id: 'p-' + Date.now(),
       slug: data.slug || (data.title || 'project').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       display_order: items.length,
       created_at: new Date().toISOString(),
-    };
-    items.push(newProject);
+    });
+    items.push(normalized);
     setStored(STORAGE_KEYS.PROJECTS, items);
-    return Promise.resolve({ data: { project: newProject } });
+    return Promise.resolve({ data: { ...normalized, project: normalized } });
   },
 
   updateProject(id, data) {
-    const items = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
-    const index = items.findIndex(p => p.id === id);
+    const raw = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const items = Array.isArray(raw) ? raw : [];
+    const index = items.findIndex(p => String(p.id) === String(id));
     if (index === -1) return Promise.reject({ response: { status: 404, data: { error: 'Project not found' } } });
-    items[index] = { ...items[index], ...data, updated_at: new Date().toISOString() };
+    const normalized = normalizeProject({
+      ...items[index],
+      ...data,
+      updated_at: new Date().toISOString(),
+    });
+    items[index] = normalized;
     setStored(STORAGE_KEYS.PROJECTS, items);
-    return Promise.resolve({ data: { project: items[index] } });
+    return Promise.resolve({ data: { ...normalized, project: normalized } });
   },
 
   deleteProject(id) {
-    let items = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
-    items = items.filter(p => p.id !== id);
+    let raw = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    let items = (Array.isArray(raw) ? raw : []).filter(p => String(p.id) !== String(id));
     setStored(STORAGE_KEYS.PROJECTS, items);
     return Promise.resolve({ data: { message: 'Project deleted' } });
   },
 
   togglePublishProject(id) {
-    const items = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
-    const item = items.find(p => p.id === id);
-    if (item) item.published = !item.published;
-    setStored(STORAGE_KEYS.PROJECTS, items);
-    return Promise.resolve({ data: { project: item } });
+    const raw = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const items = (Array.isArray(raw) ? raw : []).map(normalizeProject);
+    const item = items.find(p => String(p.id) === String(id));
+    if (item) {
+      item.published = !item.published;
+      setStored(STORAGE_KEYS.PROJECTS, items);
+      return Promise.resolve({ data: { ...item, project: item } });
+    }
+    return Promise.reject({ response: { status: 404, data: { error: 'Project not found' } } });
   },
 
   toggleFeatureProject(id) {
-    const items = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
-    const item = items.find(p => p.id === id);
-    if (item) item.featured = !item.featured;
-    setStored(STORAGE_KEYS.PROJECTS, items);
-    return Promise.resolve({ data: { project: item } });
+    const raw = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const items = (Array.isArray(raw) ? raw : []).map(normalizeProject);
+    const item = items.find(p => String(p.id) === String(id));
+    if (item) {
+      item.featured = !item.featured;
+      setStored(STORAGE_KEYS.PROJECTS, items);
+      return Promise.resolve({ data: { ...item, project: item } });
+    }
+    return Promise.reject({ response: { status: 404, data: { error: 'Project not found' } } });
   },
 
   reorderProjects(reorderedItems) {
-    let items = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
-    const orderMap = new Map(reorderedItems.map(item => [item.id, item.display_order]));
+    let raw = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    let items = (Array.isArray(raw) ? raw : []).map(normalizeProject);
+    const orderMap = new Map(reorderedItems.map(item => [String(item.id), item.display_order]));
     items.forEach(p => {
-      if (orderMap.has(p.id)) p.display_order = orderMap.get(p.id);
+      if (orderMap.has(String(p.id))) p.display_order = orderMap.get(String(p.id));
     });
     items.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
     setStored(STORAGE_KEYS.PROJECTS, items);
@@ -304,10 +538,11 @@ export const localStore = {
   },
 
   duplicateProject(id) {
-    const items = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
-    const item = items.find(p => p.id === id);
+    const raw = getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const items = (Array.isArray(raw) ? raw : []).map(normalizeProject);
+    const item = items.find(p => String(p.id) === String(id));
     if (!item) return Promise.reject({ response: { status: 404, data: { error: 'Project not found' } } });
-    const copy = {
+    const copy = normalizeProject({
       ...item,
       id: 'p-' + Date.now(),
       title: `${item.title} (Copy)`,
@@ -315,57 +550,70 @@ export const localStore = {
       published: false,
       display_order: items.length,
       created_at: new Date().toISOString(),
-    };
+    });
     items.push(copy);
     setStored(STORAGE_KEYS.PROJECTS, items);
-    return Promise.resolve({ data: { project: copy } });
+    return Promise.resolve({ data: { ...copy, project: copy } });
   },
 
   // ── Showreel ──────────────────────────
   getActiveShowreel() {
-    const items = getStored(STORAGE_KEYS.SHOWREELS, []);
-    const active = items.find(s => s.is_active) || items[0] || null;
-    return Promise.resolve({ data: { showreel: active } });
+    const raw = getStored(STORAGE_KEYS.SHOWREELS, INITIAL_SHOWREELS);
+    const items = (Array.isArray(raw) && raw.length > 0 ? raw : INITIAL_SHOWREELS).map(normalizeShowreel);
+    const active = items.find(s => s.is_active) || items[0] || INITIAL_SHOWREEL;
+    return Promise.resolve({
+      data: {
+        ...(active || {}),
+        showreel: active,
+      },
+    });
   },
 
   getShowreels() {
-    const items = getStored(STORAGE_KEYS.SHOWREELS, []);
-    return Promise.resolve({ data: { showreels: items } });
+    const raw = getStored(STORAGE_KEYS.SHOWREELS, INITIAL_SHOWREELS);
+    const items = (Array.isArray(raw) && raw.length > 0 ? raw : INITIAL_SHOWREELS).map(normalizeShowreel);
+    return Promise.resolve({ data: items, showreels: items });
   },
 
   createShowreel(data) {
-    const items = getStored(STORAGE_KEYS.SHOWREELS, []);
-    const newSr = {
+    const raw = getStored(STORAGE_KEYS.SHOWREELS, []);
+    const items = Array.isArray(raw) ? raw : [];
+    const normalized = normalizeShowreel({
       ...data,
       id: 'sr-' + Date.now(),
-      is_active: !!data.is_active,
       created_at: new Date().toISOString(),
-    };
-    if (newSr.is_active) {
-      items.forEach(s => s.is_active = false);
+    });
+    if (normalized.is_active) {
+      items.forEach(s => { s.is_active = false; s.active = false; });
     }
-    items.push(newSr);
+    items.push(normalized);
     setStored(STORAGE_KEYS.SHOWREELS, items);
-    return Promise.resolve({ data: { showreel: newSr } });
+    return Promise.resolve({ data: { ...normalized, showreel: normalized } });
   },
 
   updateShowreel(id, data) {
-    const items = getStored(STORAGE_KEYS.SHOWREELS, []);
-    const index = items.findIndex(s => s.id === id);
+    const raw = getStored(STORAGE_KEYS.SHOWREELS, []);
+    const items = Array.isArray(raw) ? raw : [];
+    const index = items.findIndex(s => String(s.id) === String(id));
     if (index === -1) return Promise.reject({ response: { status: 404, data: { error: 'Showreel not found' } } });
-    if (data.is_active) {
-      items.forEach(s => s.is_active = false);
+    const normalized = normalizeShowreel({
+      ...items[index],
+      ...data,
+    });
+    if (normalized.is_active) {
+      items.forEach(s => { s.is_active = false; s.active = false; });
     }
-    items[index] = { ...items[index], ...data };
+    items[index] = normalized;
     setStored(STORAGE_KEYS.SHOWREELS, items);
-    return Promise.resolve({ data: { showreel: items[index] } });
+    return Promise.resolve({ data: { ...normalized, showreel: normalized } });
   },
 
   deleteShowreel(id) {
-    let items = getStored(STORAGE_KEYS.SHOWREELS, []);
-    items = items.filter(s => s.id !== id);
+    let raw = getStored(STORAGE_KEYS.SHOWREELS, []);
+    let items = (Array.isArray(raw) ? raw : []).filter(s => String(s.id) !== String(id));
     if (items.length > 0 && !items.some(s => s.is_active)) {
       items[0].is_active = true;
+      items[0].active = true;
     }
     setStored(STORAGE_KEYS.SHOWREELS, items);
     return Promise.resolve({ data: { message: 'Showreel deleted' } });
@@ -373,45 +621,50 @@ export const localStore = {
 
   // ── Before / After ────────────────────
   getBeforeAfter() {
-    const items = getStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER);
+    const raw = getStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER);
+    const items = (Array.isArray(raw) ? raw : []).map(normalizeBeforeAfter);
     items.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
-    return Promise.resolve({ data: { items } });
+    return Promise.resolve({ data: items, items });
   },
 
   createBeforeAfter(data) {
-    const items = getStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER);
-    const newItem = {
+    const raw = getStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER);
+    const items = Array.isArray(raw) ? raw : [];
+    const newItem = normalizeBeforeAfter({
       ...data,
       id: 'ba-' + Date.now(),
       display_order: items.length,
       published: data.published ?? true,
-    };
+    });
     items.push(newItem);
     setStored(STORAGE_KEYS.BEFORE_AFTER, items);
-    return Promise.resolve({ data: { item: newItem } });
+    return Promise.resolve({ data: { ...newItem, item: newItem } });
   },
 
   updateBeforeAfter(id, data) {
-    const items = getStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER);
-    const index = items.findIndex(b => b.id === id);
+    const raw = getStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER);
+    const items = Array.isArray(raw) ? raw : [];
+    const index = items.findIndex(b => String(b.id) === String(id));
     if (index === -1) return Promise.reject({ response: { status: 404, data: { error: 'Item not found' } } });
-    items[index] = { ...items[index], ...data };
+    const normalized = normalizeBeforeAfter({ ...items[index], ...data });
+    items[index] = normalized;
     setStored(STORAGE_KEYS.BEFORE_AFTER, items);
-    return Promise.resolve({ data: { item: items[index] } });
+    return Promise.resolve({ data: { ...normalized, item: normalized } });
   },
 
   deleteBeforeAfter(id) {
-    let items = getStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER);
-    items = items.filter(b => b.id !== id);
+    let raw = getStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER);
+    let items = (Array.isArray(raw) ? raw : []).filter(b => String(b.id) !== String(id));
     setStored(STORAGE_KEYS.BEFORE_AFTER, items);
     return Promise.resolve({ data: { message: 'Item deleted' } });
   },
 
   reorderBeforeAfter(reorderedItems) {
-    let items = getStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER);
-    const orderMap = new Map(reorderedItems.map(item => [item.id, item.display_order]));
+    let raw = getStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER);
+    let items = (Array.isArray(raw) ? raw : []).map(normalizeBeforeAfter);
+    const orderMap = new Map(reorderedItems.map(item => [String(item.id), item.display_order]));
     items.forEach(b => {
-      if (orderMap.has(b.id)) b.display_order = orderMap.get(b.id);
+      if (orderMap.has(String(b.id))) b.display_order = orderMap.get(String(b.id));
     });
     items.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
     setStored(STORAGE_KEYS.BEFORE_AFTER, items);
@@ -420,45 +673,49 @@ export const localStore = {
 
   // ── Services ──────────────────────────
   getServices() {
-    const items = getStored(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
+    const raw = getStored(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
+    const items = (Array.isArray(raw) ? raw : []).map(normalizeService);
     items.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
-    return Promise.resolve({ data: { services: items } });
+    return Promise.resolve({ data: items, services: items });
   },
 
   createService(data) {
-    const items = getStored(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
-    const newItem = {
+    const raw = getStored(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
+    const items = Array.isArray(raw) ? raw : [];
+    const newItem = normalizeService({
       ...data,
       id: 's-' + Date.now(),
       display_order: items.length,
       published: data.published ?? true,
-    };
+    });
     items.push(newItem);
     setStored(STORAGE_KEYS.SERVICES, items);
-    return Promise.resolve({ data: { service: newItem } });
+    return Promise.resolve({ data: { ...newItem, service: newItem } });
   },
 
   updateService(id, data) {
-    const items = getStored(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
-    const index = items.findIndex(s => s.id === id);
+    const raw = getStored(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
+    const items = Array.isArray(raw) ? raw : [];
+    const index = items.findIndex(s => String(s.id) === String(id));
     if (index === -1) return Promise.reject({ response: { status: 404, data: { error: 'Service not found' } } });
-    items[index] = { ...items[index], ...data };
+    const normalized = normalizeService({ ...items[index], ...data });
+    items[index] = normalized;
     setStored(STORAGE_KEYS.SERVICES, items);
-    return Promise.resolve({ data: { service: items[index] } });
+    return Promise.resolve({ data: { ...normalized, service: normalized } });
   },
 
   deleteService(id) {
     let items = getStored(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
-    items = items.filter(s => s.id !== id);
+    items = items.filter(s => String(s.id) !== String(id));
     setStored(STORAGE_KEYS.SERVICES, items);
     return Promise.resolve({ data: { message: 'Service deleted' } });
   },
 
   reorderServices(reorderedItems) {
     let items = getStored(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
-    const orderMap = new Map(reorderedItems.map(item => [item.id, item.display_order]));
+    const orderMap = new Map(reorderedItems.map(item => [String(item.id), item.display_order]));
     items.forEach(s => {
-      if (orderMap.has(s.id)) s.display_order = orderMap.get(s.id);
+      if (orderMap.has(String(s.id))) s.display_order = orderMap.get(String(s.id));
     });
     items.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
     setStored(STORAGE_KEYS.SERVICES, items);
@@ -467,28 +724,50 @@ export const localStore = {
 
   // ── About ─────────────────────────────
   getAbout() {
-    const about = getStored(STORAGE_KEYS.ABOUT, INITIAL_ABOUT);
-    return Promise.resolve({ data: { about } });
+    const raw = getStored(STORAGE_KEYS.ABOUT, INITIAL_ABOUT);
+    const normalized = normalizeAbout(raw);
+    return Promise.resolve({
+      data: {
+        ...normalized,
+        about: normalized,
+      },
+    });
   },
 
   updateAbout(data) {
     const current = getStored(STORAGE_KEYS.ABOUT, INITIAL_ABOUT);
-    const updated = { ...current, ...data };
-    setStored(STORAGE_KEYS.ABOUT, updated);
-    return Promise.resolve({ data: { about: updated } });
+    const normalized = normalizeAbout({ ...current, ...data });
+    setStored(STORAGE_KEYS.ABOUT, normalized);
+    return Promise.resolve({
+      data: {
+        ...normalized,
+        about: normalized,
+      },
+    });
   },
 
   // ── Settings ──────────────────────────
   getSettings() {
-    const settings = getStored(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
-    return Promise.resolve({ data: { settings } });
+    const raw = getStored(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
+    const normalized = normalizeSettings(raw);
+    return Promise.resolve({
+      data: {
+        ...normalized,
+        settings: normalized,
+      },
+    });
   },
 
   updateSettings(data) {
     const current = getStored(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
-    const updated = { ...current, ...data };
-    setStored(STORAGE_KEYS.SETTINGS, updated);
-    return Promise.resolve({ data: { settings: updated } });
+    const normalized = normalizeSettings({ ...current, ...data });
+    setStored(STORAGE_KEYS.SETTINGS, normalized);
+    return Promise.resolve({
+      data: {
+        ...normalized,
+        settings: normalized,
+      },
+    });
   },
 
   // ── Media Library ─────────────────────
@@ -618,7 +897,7 @@ export const localStore = {
     return JSON.stringify({
       projects: getStored(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS),
       services: getStored(STORAGE_KEYS.SERVICES, INITIAL_SERVICES),
-      showreels: getStored(STORAGE_KEYS.SHOWREELS, [INITIAL_SHOWREEL]),
+      showreels: getStored(STORAGE_KEYS.SHOWREELS, INITIAL_SHOWREELS),
       beforeAfter: getStored(STORAGE_KEYS.BEFORE_AFTER, INITIAL_BEFORE_AFTER),
       about: getStored(STORAGE_KEYS.ABOUT, INITIAL_ABOUT),
       settings: getStored(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS),
