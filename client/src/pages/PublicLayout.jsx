@@ -100,7 +100,7 @@ export default function PublicLayout() {
       <main className="relative z-10">
         <Outlet context={{ settings, about }} />
       </main>
-      <Footer settings={settings} />
+      <Footer settings={settings} about={about} />
     </div>
   );
 }

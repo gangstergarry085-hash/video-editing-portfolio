@@ -10,6 +10,7 @@ import TiltCard from '../components/TiltCard';
 import AudioVisualizer from '../components/AudioVisualizer';
 import FilmStripTicker from '../components/FilmStripTicker';
 import VideoPlayer from '../components/VideoPlayer';
+import { getSocialIcon, getSocialBrandColor } from '../components/SocialIcons';
 import {
   HiPlay,
   HiOutlineArrowRight,
@@ -144,6 +145,10 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState('All');
 
   const effectiveAbout = context.about || about;
+  const combinedSocialLinks = {
+    ...(effectiveAbout?.social_links || {}),
+    ...(settings?.social_links || {}),
+  };
 
   useEffect(() => {
     Promise.allSettled([
@@ -936,6 +941,37 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
+
+            {/* Social Channels / Connect */}
+            {Object.entries(combinedSocialLinks).filter(([, url]) => Boolean(url)).length > 0 && (
+              <div className="pt-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                  <span className="timecode text-xs text-text-muted">// CONNECT &amp; FOLLOW</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  {Object.entries(combinedSocialLinks)
+                    .filter(([, url]) => Boolean(url))
+                    .map(([platform, url]) => {
+                      const Icon = getSocialIcon(platform);
+                      const brandColor = getSocialBrandColor(platform);
+                      return (
+                        <a
+                          key={platform}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl glass-light border border-border text-text-secondary ${brandColor} transition-all duration-300 hover:scale-105 active:scale-95 text-xs font-mono uppercase tracking-wider group`}
+                          title={platform}
+                        >
+                          <Icon className="w-4 h-4 text-accent transition-transform group-hover:scale-110" />
+                          <span className="font-medium">{platform}</span>
+                        </a>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
       </Section>
@@ -970,20 +1006,28 @@ export default function HomePage() {
               </a>
             </div>
 
-            {/* Social Links */}
-            {settings?.social_links && Object.keys(settings.social_links).length > 0 && (
-              <div className="flex items-center justify-center gap-6 mt-10">
-                {Object.entries(settings.social_links).map(([platform, url]) => (
-                  <a
-                    key={platform}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-text-muted hover:text-accent transition-colors text-xs font-mono uppercase tracking-wider"
-                  >
-                    {platform}
-                  </a>
-                ))}
+            {/* Social Links & Channels */}
+            {Object.entries(combinedSocialLinks).filter(([, url]) => Boolean(url)).length > 0 && (
+              <div className="flex flex-wrap items-center justify-center gap-3.5 mt-10">
+                {Object.entries(combinedSocialLinks)
+                  .filter(([, url]) => Boolean(url))
+                  .map(([platform, url]) => {
+                    const Icon = getSocialIcon(platform);
+                    const brandColor = getSocialBrandColor(platform);
+                    return (
+                      <a
+                        key={platform}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-2.5 px-5 py-3 rounded-full glass border border-border/80 text-text-secondary ${brandColor} transition-all duration-300 hover:scale-105 active:scale-95 text-xs font-mono uppercase tracking-wider shadow-sm group`}
+                        title={platform}
+                      >
+                        <Icon className="w-4 h-4 transition-transform group-hover:scale-110" />
+                        <span>{platform}</span>
+                      </a>
+                    );
+                  })}
               </div>
             )}
           </motion.div>

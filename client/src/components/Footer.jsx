@@ -1,7 +1,11 @@
 import { HiOutlineArrowUp } from 'react-icons/hi2';
+import { getSocialIcon, getSocialBrandColor } from './SocialIcons';
 
-export default function Footer({ settings }) {
-  const socialLinks = settings?.social_links || {};
+export default function Footer({ settings, about }) {
+  const socialLinks = {
+    ...(about?.social_links || {}),
+    ...(settings?.social_links || {}),
+  };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -36,22 +40,28 @@ export default function Footer({ settings }) {
           </div>
 
           {/* Right — social links & back to top */}
-          <div className="flex items-center gap-5">
-            {Object.entries(socialLinks).map(([platform, url]) => (
-              <a
-                key={platform}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-text-secondary hover:text-accent transition-colors text-xs font-mono tracking-wider uppercase"
-              >
-                {platform}
-              </a>
-            ))}
+          <div className="flex items-center gap-3">
+            {Object.entries(socialLinks).filter(([, url]) => Boolean(url)).map(([platform, url]) => {
+              const Icon = getSocialIcon(platform);
+              const brandColor = getSocialBrandColor(platform);
+              return (
+                <a
+                  key={platform}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-9 h-9 rounded-full glass border border-border flex items-center justify-center text-text-secondary ${brandColor} transition-all duration-300 hover:scale-110 active:scale-95`}
+                  title={platform.charAt(0).toUpperCase() + platform.slice(1)}
+                  aria-label={platform}
+                >
+                  <Icon className="w-4 h-4" />
+                </a>
+              );
+            })}
 
             <button
               onClick={scrollToTop}
-              className="p-2.5 rounded-full glass border border-border hover:border-accent/40 text-text-secondary hover:text-accent transition-all duration-300 group"
+              className="p-2.5 rounded-full glass border border-border hover:border-accent/40 text-text-secondary hover:text-accent transition-all duration-300 group ml-2"
               title="Return to Head of Reel"
               aria-label="Back to top"
             >
