@@ -10,7 +10,7 @@
 [functions]
   node_bundler = "esbuild"
   included_files = ["server/**"]
-  external_node_modules = ["pg"]
+
 
 # API Redirects (Proxy both /api and /api/* to the serverless function)
 [[redirects]]
