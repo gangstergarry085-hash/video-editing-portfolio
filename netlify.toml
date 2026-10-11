@@ -1,6 +1,6 @@
 [build]
   base = "."
-  command = "npm --prefix server install && npm --prefix client install && npm --prefix client run build"
+  command = "npm --prefix server install && npm --prefix client install --include=dev && npm --prefix client run build"
   publish = "client/dist"
   functions = "netlify/functions"
 
@@ -9,8 +9,8 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["pg-native", "@electric-sql/pglite", "pglite-server"]
   included_files = ["server/**"]
+  external_node_modules = ["pg"]
 
 # API Redirects (Proxy both /api and /api/* to the serverless function)
 [[redirects]]

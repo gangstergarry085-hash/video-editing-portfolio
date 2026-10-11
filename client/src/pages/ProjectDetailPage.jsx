@@ -21,6 +21,7 @@ export default function ProjectDetailPage() {
   const { slug } = useParams();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeCut, setActiveCut] = useState('landscape'); // 'landscape' or 'vertical'
 
   useEffect(() => {
     setLoading(true);
@@ -29,6 +30,11 @@ export default function ProjectDetailPage() {
       .then(({ data }) => {
         const item = data?.project || data;
         setProject(item || null);
+        if (item?.mobile_video_url && !item?.video_url) {
+          setActiveCut('vertical');
+        } else {
+          setActiveCut('landscape');
+        }
       })
       .catch(() => {
         setProject(null);
@@ -67,6 +73,12 @@ export default function ProjectDetailPage() {
       </div>
     );
   }
+
+  const hasLandscape = Boolean(project.video_url);
+  const hasVertical = Boolean(project.mobile_video_url);
+  const hasBoth = hasLandscape && hasVertical;
+  const isVerticalActive = activeCut === 'vertical' || (!hasLandscape && hasVertical);
+  const currentVideoUrl = isVerticalActive ? project.mobile_video_url : project.video_url;
 
   return (
     <div className="min-h-screen pt-28 pb-24 px-6 relative overflow-hidden">
@@ -125,50 +137,94 @@ export default function ProjectDetailPage() {
           </div>
         </motion.div>
 
+        {/* Aspect Ratio / Format Switcher if both cuts exist */}
+        {hasBoth && (
+          <div className="flex items-center justify-center gap-3 mt-8">
+            <span className="text-xs font-mono text-text-muted">FORMAT CUT:</span>
+            <button
+              type="button"
+              onClick={() => setActiveCut('landscape')}
+              className={`px-4 py-1.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${
+                !isVerticalActive
+                  ? 'bg-accent text-surface font-bold shadow-lg shadow-accent/25'
+                  : 'glass text-text-secondary hover:text-text-primary hover:border-accent/40'
+              }`}
+            >
+              16:9 CINEMA MASTER
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveCut('vertical')}
+              className={`px-4 py-1.5 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${
+                isVerticalActive
+                  ? 'bg-accent text-surface font-bold shadow-lg shadow-accent/25'
+                  : 'glass text-text-secondary hover:text-text-primary hover:border-accent/40'
+              }`}
+            >
+              9:16 VERTICAL REEL
+            </button>
+          </div>
+        )}
+
         {/* Media / Video Showcase Frame */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mt-10 rounded-2xl overflow-hidden aspect-video bg-surface-card border border-border/80 shadow-2xl relative group"
+          className={`mt-8 ${isVerticalActive ? 'flex flex-col items-center' : ''}`}
         >
-          {project.video_url ? (
-            <VideoPlayer
-              url={project.video_url}
-              poster={project.thumbnail_url}
-              title={project.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="relative w-full h-full">
-              <img
-                src={project.thumbnail_url}
-                alt={project.title}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover filter brightness-95 group-hover:scale-102 transition-transform duration-700"
+          {isVerticalActive ? (
+            /* 9:16 Smartphone Showcase Frame */
+            <div className="w-full max-w-xs sm:max-w-sm aspect-[9/16] rounded-3xl overflow-hidden bg-black border-2 border-border/80 shadow-[0_25px_60px_rgba(0,0,0,0.8)] relative group ring-4 ring-black/40">
+              <VideoPlayer
+                url={currentVideoUrl}
+                poster={project.thumbnail_url}
+                title={`${project.title} (Vertical Reel)`}
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-black/30 flex items-end justify-between p-6">
-                <div className="glass px-3.5 py-1.5 rounded-lg text-xs font-mono text-text-primary flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-accent" />
-                  <span>MASTER PREVIEW · 4K DCI</span>
+            </div>
+          ) : currentVideoUrl ? (
+            /* 16:9 Landscape Cinema Frame */
+            <div className="rounded-2xl overflow-hidden aspect-video bg-surface-card border border-border/80 shadow-2xl relative group">
+              <VideoPlayer
+                url={currentVideoUrl}
+                poster={project.thumbnail_url}
+                title={project.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="rounded-2xl overflow-hidden aspect-video bg-surface-card border border-border/80 shadow-2xl relative group">
+              <div className="relative w-full h-full">
+                <img
+                  src={project.thumbnail_url}
+                  alt={project.title}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover filter brightness-95 group-hover:scale-102 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-black/30 flex items-end justify-between p-6">
+                  <div className="glass px-3.5 py-1.5 rounded-lg text-xs font-mono text-text-primary flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-accent" />
+                    <span>MASTER PREVIEW · 4K DCI</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-white/60 bg-black/50 px-2.5 py-1 rounded border border-white/10">
+                    24.000 FPS · PRORES 422 HQ
+                  </span>
                 </div>
-                <span className="text-[10px] font-mono text-white/60 bg-black/50 px-2.5 py-1 rounded border border-white/10">
-                  24.000 FPS · PRORES 422 HQ
-                </span>
               </div>
             </div>
           )}
         </motion.div>
 
         {/* Technical Specs Strip */}
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="p-3.5 rounded-xl bg-surface-card border border-border/70">
             <span className="block text-[10px] font-mono text-text-muted uppercase tracking-wider">
               TIMELINE RESOLUTION
             </span>
             <span className="text-xs font-mono font-bold text-text-primary mt-1 block">
-              4096 × 2160 DCI
+              {isVerticalActive ? '1080 × 1920 Vertical HD' : '4096 × 2160 DCI'}
             </span>
           </div>
           <div className="p-3.5 rounded-xl bg-surface-card border border-border/70">
@@ -184,7 +240,7 @@ export default function ProjectDetailPage() {
               ASPECT RATIO
             </span>
             <span className="text-xs font-mono font-bold text-text-primary mt-1 block">
-              16:9 / 2.39:1 Cinema
+              {isVerticalActive ? '9:16 Mobile Portrait' : '16:9 / 2.39:1 Cinema'}
             </span>
           </div>
           <div className="p-3.5 rounded-xl bg-surface-card border border-border/70">

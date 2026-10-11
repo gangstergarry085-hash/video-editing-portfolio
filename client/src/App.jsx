@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
@@ -35,27 +35,6 @@ function RouteLoader() {
 }
 
 function App() {
-  useEffect(() => {
-    // Purge legacy multi-theme settings to enforce signature cinema master look
-    try {
-      localStorage.removeItem('dev_portfolio_theme');
-      document.documentElement.removeAttribute('data-theme');
-
-      // Purge any previously cached demo projects, before-after, and showreel from localStorage
-      const purgeIfSample = (key, identifier) => {
-        const val = localStorage.getItem(key);
-        if (val && val.includes(identifier)) {
-          localStorage.removeItem(key);
-        }
-      };
-      purgeIfSample('dev_cms_projects', 'star-excellent-academy');
-      purgeIfSample('dev_cms_before_after', 'ba-1');
-      purgeIfSample('dev_cms_showreels', 'Official Showreel 2024-2025');
-      purgeIfSample('dev_cms_media', 'showreel-poster.jpg');
-    } catch {
-      // ignore
-    }
-  }, []);
   return (
     <AuthProvider>
       <BrowserRouter basename={import.meta.env.BASE_URL}>

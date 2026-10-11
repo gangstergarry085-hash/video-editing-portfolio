@@ -7,7 +7,9 @@ import { requireAuth } from '../middleware/auth.js';
 import { createError } from '../middleware/errorHandler.js';
 import { getStorage } from '../services/storage/index.js';
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename = typeof import.meta?.url === 'string'
+  ? fileURLToPath(import.meta.url)
+  : path.join(process.cwd(), 'server/src/routes/media.js');
 const __dirname = path.dirname(__filename);
 
 const router = Router();

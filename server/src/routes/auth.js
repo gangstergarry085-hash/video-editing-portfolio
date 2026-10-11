@@ -1,13 +1,16 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import Joi from 'joi';
 import pool from '../config/db.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, JWT_SECRET } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { createError } from '../middleware/errorHandler.js';
 
 const router = Router();
+
+const TOKEN_EXPIRY = '24h';
 
 // Rate limit login attempts (generous in development)
 const loginLimiter = rateLimit({
@@ -51,28 +54,25 @@ router.post('/login', loginLimiter, validate(loginSchema), async (req, res, next
       return next(createError(401, 'Invalid email or password'));
     }
 
-    // Regenerate session to prevent session fixation attacks
-    req.session.regenerate((err) => {
-      if (err) return next(err);
-      req.session.userId = user.id;
-      req.session.email = user.email;
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: TOKEN_EXPIRY }
+    );
 
-      res.json({
-        user: { id: user.id, email: user.email },
-      });
+    res.json({
+      user: { id: user.id, email: user.email },
+      token,
     });
   } catch (err) {
     next(err);
   }
 });
 
-// POST /api/auth/logout
-router.post('/logout', (req, res, next) => {
-  req.session.destroy((err) => {
-    if (err) return next(err);
-    res.clearCookie('connect.sid');
-    res.json({ message: 'Logged out' });
-  });
+// POST /api/auth/logout — no-op for JWT (client discards token)
+router.post('/logout', (req, res) => {
+  res.json({ message: 'Logged out' });
 });
 
 const passwordChangeSchema = Joi.object({
@@ -84,7 +84,7 @@ const passwordChangeSchema = Joi.object({
 router.put('/password', requireAuth, validate(passwordChangeSchema), async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const userId = req.session.userId;
+    const userId = req.userId;
 
     const { rows } = await pool.query(
       'SELECT id, password_hash FROM users WHERE id = $1',
@@ -112,14 +112,10 @@ router.put('/password', requireAuth, validate(passwordChangeSchema), async (req,
   }
 });
 
-// GET /api/auth/me
-router.get('/me', (req, res) => {
-  if (!req.session || !req.session.userId) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-
+// GET /api/auth/me — verify token & return user info
+router.get('/me', requireAuth, (req, res) => {
   res.json({
-    user: { id: req.session.userId, email: req.session.email },
+    user: { id: req.userId, email: req.userEmail },
   });
 });
 

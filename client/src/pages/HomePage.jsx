@@ -320,13 +320,16 @@ export default function HomePage() {
       <Section id="showreel" className="bg-surface-elevated/20">
         <SectionTitle
           label="TIMELINE SHOWCASE"
-          title="The 2024 Reel"
-          subtitle="A 60-second compilation of high-impact commercial cuts, dynamic kinetic typography, and editorial color science."
+          title={showreel?.title || 'The 2024 Reel'}
+          subtitle={
+            showreel?.description ||
+            'A 60-second compilation of high-impact commercial cuts, dynamic kinetic typography, and editorial color science.'
+          }
         />
 
         <motion.div variants={fadeUp} className="relative">
-          <TiltCard className="rounded-3xl overflow-hidden glass-card p-3 shadow-2xl border border-border group">
-            <div className="relative rounded-2xl overflow-hidden aspect-video bg-surface-card glow">
+          <TiltCard className={`rounded-3xl overflow-hidden glass-card p-3 shadow-2xl border border-border group ${showreel?.aspect_ratio === '9:16' ? 'max-w-md mx-auto' : ''}`}>
+            <div className={`relative rounded-2xl overflow-hidden ${showreel?.aspect_ratio === '9:16' ? 'aspect-[9/16]' : 'aspect-video'} bg-surface-card glow`}>
               {loading ? (
                 <div className="w-full h-full bg-surface-card flex items-center justify-center animate-pulse">
                   <div className="flex flex-col items-center gap-2">
@@ -355,7 +358,9 @@ export default function HomePage() {
                         <span className="w-2 h-2 rounded-full bg-accent/60" />
                         <span className="tracking-widest font-bold text-white/80">STANDBY 4K DCI</span>
                       </div>
-                      <span className="tracking-wider text-white/40">ASPECT: 16:9 CINEMA</span>
+                      <span className="tracking-wider text-white/40">
+                        ASPECT: {showreel?.aspect_ratio === '9:16' ? '9:16 VERTICAL' : '16:9 CINEMA'}
+                      </span>
                     </div>
 
                     <div className="flex items-center justify-between text-[10px] font-mono text-white/40">
@@ -370,10 +375,10 @@ export default function HomePage() {
                       <HiPlay className="w-6 h-6 ml-0.5 text-accent/80" />
                     </div>
                     <p className="font-display font-bold text-lg sm:text-xl text-text-primary tracking-wide">
-                      {showreel?.title || 'SHOWREEL IN POST-PRODUCTION'}
+                      {showreel?.title || 'The 2024 Reel'}
                     </p>
                     <p className="text-xs font-mono text-text-muted mt-1.5 max-w-sm mx-auto">
-                      The official master showreel is currently being assembled and will premiere here soon.
+                      {showreel?.description || 'The official master showreel is currently being assembled and will premiere here soon.'}
                     </p>
                   </div>
                 </div>
@@ -552,9 +557,14 @@ export default function HomePage() {
                         </div>
 
                         {/* Format Badge - Top Right */}
-                        <div className="absolute top-3.5 right-3.5 z-10">
+                        <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5">
+                          {project.mobile_video_url && (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-mono tracking-widest uppercase bg-accent text-surface font-bold shadow">
+                              9:16 REEL
+                            </span>
+                          )}
                           <span className="px-2 py-0.5 rounded text-[9px] font-mono tracking-widest uppercase bg-black/60 border border-white/10 text-text-secondary">
-                            4K DCI · 24P
+                            {project.project_type || '4K DCI · 24P'}
                           </span>
                         </div>
 

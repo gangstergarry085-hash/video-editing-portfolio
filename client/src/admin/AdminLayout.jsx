@@ -69,7 +69,9 @@ export default function AdminLayout() {
             <h1 className="text-lg font-display font-bold text-text-primary">Dev Anand</h1>
             <div className="flex items-center gap-1.5 mt-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <p className="text-[11px] font-mono text-emerald-400">CMS ONLINE</p>
+              <p className="text-[11px] font-mono text-emerald-400">
+                LIVE CLOUD CMS
+              </p>
             </div>
           </div>
           <button

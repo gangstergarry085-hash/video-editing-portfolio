@@ -3,11 +3,15 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename = typeof import.meta?.url === 'string'
+  ? fileURLToPath(import.meta.url)
+  : path.join(process.cwd(), 'netlify/functions/api.mjs');
 const __dirname = path.dirname(__filename);
 
-// Ensure .env is loaded before server index is imported
-dotenv.config({ path: path.join(__dirname, '..', '..', 'server', '.env') });
+// Ensure .env is loaded before server index is imported if exists
+try {
+  dotenv.config({ path: path.join(__dirname, '..', '..', 'server', '.env') });
+} catch {}
 
 let serverlessHandler = null;
 

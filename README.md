@@ -190,15 +190,16 @@ This project is configured to deploy as a **Netlify site** with the Express back
 | Variable | Value |
 |---|---|
 | `DATABASE_URL` | Your Neon connection string |
+| `JWT_SECRET` | A long random string (32+ chars for token signing) |
 | `SESSION_SECRET` | A long random string (32+ chars) |
 | `NODE_ENV` | `production` |
-| `ADMIN_EMAIL` | Your admin email |
-| `ADMIN_PASSWORD` | Your admin password |
+| `ADMIN_EMAIL` | Your admin email (e.g. `admin@devanand.com`) |
+| `ADMIN_PASSWORD` | Your admin password (e.g. `garry@2004`) |
 | `CLIENT_URL` | Your Netlify site URL (e.g. `https://devAnand.netlify.app`) |
 | `STORAGE_PROVIDER` | `cloudinary` |
-| `CLOUDINARY_CLOUD_NAME` | Your cloud name |
-| `CLOUDINARY_API_KEY` | Your API key |
-| `CLOUDINARY_API_SECRET` | Your API secret |
+| `CLOUDINARY_CLOUD_NAME` | Your Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Your Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Your Cloudinary API secret |
 
 6. Click **Deploy site**
 
@@ -262,12 +263,6 @@ ADMIN_EMAIL=new@email.com ADMIN_PASSWORD=new-strong-password npm run seed:admin 
 This repository includes a pre-configured GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) to automatically build and deploy your React frontend to **GitHub Pages** completely for free.
 
 ### Step 1: Create a GitHub Repository & Push
-Run the included PowerShell helper script or execute these commands:
-```powershell
-# Automated helper:
-.\deploy-to-github.ps1
-```
-Or manually:
 ```bash
 git branch -M main
 git remote add origin https://github.com/<your-username>/<your-repo-name>.git

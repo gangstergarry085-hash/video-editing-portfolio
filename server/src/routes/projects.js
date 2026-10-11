@@ -18,19 +18,29 @@ const projectSchema = Joi.object({
   category: Joi.string().valid(...CATEGORIES).required(),
   description: Joi.string().allow('', null),
   shortDescription: Joi.string().max(500).allow('', null),
+  short_description: Joi.string().max(500).allow('', null),
   videoUrl: Joi.string().allow('', null),
+  video_url: Joi.string().allow('', null),
   thumbnailUrl: Joi.string().allow('', null),
+  thumbnail_url: Joi.string().allow('', null),
   mobileVideoUrl: Joi.string().allow('', null),
+  mobile_video_url: Joi.string().allow('', null),
   tools: Joi.array().items(Joi.string()).default([]),
   clientName: Joi.string().max(255).allow('', null),
+  client_name: Joi.string().max(255).allow('', null),
   clientDescription: Joi.string().allow('', null),
+  client_description: Joi.string().allow('', null),
   devRole: Joi.string().max(255).allow('', null),
+  dev_role: Joi.string().max(255).allow('', null),
   servicesProvided: Joi.array().items(Joi.string()).default([]),
+  services_provided: Joi.array().items(Joi.string()).default([]),
   projectYear: Joi.number().integer().min(2000).max(2100).allow(null),
+  project_year: Joi.number().integer().min(2000).max(2100).allow(null),
   projectType: Joi.string().max(100).allow('', null),
+  project_type: Joi.string().max(100).allow('', null),
   featured: Joi.boolean().default(false),
   published: Joi.boolean().default(false),
-});
+}).unknown(true);
 
 // Helper: generate unique slug
 async function generateSlug(title, excludeId = null) {
@@ -211,6 +221,20 @@ router.post('/', requireAuth, validate(projectSchema), async (req, res, next) =>
       'SELECT COALESCE(MAX(display_order), -1) + 1 AS next_order FROM projects'
     );
 
+    const shortDescription = data.shortDescription ?? data.short_description ?? null;
+    const videoUrl = data.videoUrl ?? data.video_url ?? null;
+    const thumbnailUrl = data.thumbnailUrl ?? data.thumbnail_url ?? null;
+    const mobileVideoUrl = data.mobileVideoUrl ?? data.mobile_video_url ?? null;
+    const clientName = data.clientName ?? data.client_name ?? null;
+    const clientDescription = data.clientDescription ?? data.client_description ?? null;
+    const devRole = data.devRole ?? data.dev_role ?? null;
+    const servicesProvided = data.servicesProvided ?? data.services_provided ?? [];
+    const projectYear = data.projectYear ?? data.project_year ?? null;
+    const projectType = data.projectType ?? data.project_type ?? null;
+    const tools = Array.isArray(data.tools) ? data.tools : [];
+    const featured = Boolean(data.featured);
+    const published = Boolean(data.published);
+
     const { rows } = await pool.query(`
       INSERT INTO projects (
         title, slug, category, description, short_description,
@@ -222,11 +246,11 @@ router.post('/', requireAuth, validate(projectSchema), async (req, res, next) =>
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
       ) RETURNING *
     `, [
-      data.title, slug, data.category, data.description, data.shortDescription,
-      data.videoUrl, data.thumbnailUrl, data.mobileVideoUrl,
-      data.tools, data.clientName, data.clientDescription, data.devRole,
-      data.servicesProvided, data.projectYear, data.projectType,
-      data.featured, data.published, maxOrder[0].next_order,
+      data.title, slug, data.category, data.description, shortDescription,
+      videoUrl, thumbnailUrl, mobileVideoUrl,
+      tools, clientName, clientDescription, devRole,
+      servicesProvided, projectYear, projectType,
+      featured, published, maxOrder[0].next_order,
     ]);
 
     res.status(201).json(rows[0]);
@@ -240,7 +264,33 @@ router.put('/:id', requireAuth, validate(projectSchema), async (req, res, next) 
   try {
     const { id } = req.params;
     const data = req.body;
-    const slug = await generateSlug(data.title, id);
+
+    const { rows: existingRows } = await pool.query('SELECT * FROM projects WHERE id = $1', [id]);
+    if (existingRows.length === 0) {
+      return next(createError(404, 'Project not found'));
+    }
+    const existing = existingRows[0];
+
+    const title = data.title ?? existing.title;
+    const slug = data.title && data.title !== existing.title
+      ? await generateSlug(data.title, id)
+      : existing.slug;
+
+    const category = data.category ?? existing.category;
+    const description = data.description !== undefined ? data.description : existing.description;
+    const shortDescription = data.shortDescription ?? data.short_description ?? existing.short_description;
+    const videoUrl = data.videoUrl ?? data.video_url ?? existing.video_url;
+    const thumbnailUrl = data.thumbnailUrl ?? data.thumbnail_url ?? existing.thumbnail_url;
+    const mobileVideoUrl = data.mobileVideoUrl ?? data.mobile_video_url ?? existing.mobile_video_url;
+    const tools = data.tools !== undefined ? data.tools : existing.tools;
+    const clientName = data.clientName ?? data.client_name ?? existing.client_name;
+    const clientDescription = data.clientDescription ?? data.client_description ?? existing.client_description;
+    const devRole = data.devRole ?? data.dev_role ?? existing.dev_role;
+    const servicesProvided = data.servicesProvided ?? data.services_provided ?? existing.services_provided;
+    const projectYear = data.projectYear ?? data.project_year ?? existing.project_year;
+    const projectType = data.projectType ?? data.project_type ?? existing.project_type;
+    const featured = data.featured !== undefined ? Boolean(data.featured) : existing.featured;
+    const published = data.published !== undefined ? Boolean(data.published) : existing.published;
 
     const { rows } = await pool.query(`
       UPDATE projects SET
@@ -253,16 +303,12 @@ router.put('/:id', requireAuth, validate(projectSchema), async (req, res, next) 
       WHERE id = $18
       RETURNING *
     `, [
-      data.title, slug, data.category, data.description, data.shortDescription,
-      data.videoUrl, data.thumbnailUrl, data.mobileVideoUrl,
-      data.tools, data.clientName, data.clientDescription, data.devRole,
-      data.servicesProvided, data.projectYear, data.projectType,
-      data.featured, data.published, id,
+      title, slug, category, description, shortDescription,
+      videoUrl, thumbnailUrl, mobileVideoUrl,
+      tools, clientName, clientDescription, devRole,
+      servicesProvided, projectYear, projectType,
+      featured, published, id,
     ]);
-
-    if (rows.length === 0) {
-      return next(createError(404, 'Project not found'));
-    }
 
     res.json(rows[0]);
   } catch (err) {

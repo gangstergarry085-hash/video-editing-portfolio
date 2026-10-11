@@ -1,8 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import session from 'express-session';
-import connectPgSimple from 'connect-pg-simple';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -18,13 +16,13 @@ import aboutRoutes from './routes/about.js';
 import settingsRoutes from './routes/settings.js';
 import mediaRoutes from './routes/media.js';
 
-import { ensureLocalDb } from './db/ensureLocalDb.js';
-
 import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename = typeof import.meta?.url === 'string'
+  ? fileURLToPath(import.meta.url)
+  : path.join(process.cwd(), 'server/src/index.js');
 const __dirname = path.dirname(__filename);
 
 const app = express();
@@ -92,49 +90,30 @@ const apiLimiter = rateLimit({
   },
   message: { error: 'Too many requests, please try again later.' },
 });
-app.use('/api', apiLimiter);
 
 // ── Body parsing ──────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// ── Sessions ──────────────────────────────────────────────
-const PgSession = connectPgSimple(session);
-
-app.use(session({
-  store: new PgSession({
-    pool,
-    tableName: 'session',
-    createTableIfMissing: false,
-  }),
-  secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: process.env.COOKIE_SAMESITE || 'lax',
-  },
-}));
-
-// ── Static uploads (local storage) ────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
-
 // ── Routes ────────────────────────────────────────────────
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/before-after', beforeAfterRoutes);
-app.use('/api/showreel', showreelRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api/about', aboutRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/media', mediaRoutes);
-
-// ── Health check ──────────────────────────────────────────
-app.get('/api/health', (req, res) => {
+const apiRouter = express.Router();
+apiRouter.use(apiLimiter);
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/projects', projectRoutes);
+apiRouter.use('/before-after', beforeAfterRoutes);
+apiRouter.use('/showreel', showreelRoutes);
+apiRouter.use('/services', serviceRoutes);
+apiRouter.use('/about', aboutRoutes);
+apiRouter.use('/settings', settingsRoutes);
+apiRouter.use('/media', mediaRoutes);
+apiRouter.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Mount on /api (standard local & Netlify redirect path)
+app.use('/api', apiRouter);
+// Mount as fallback (in case serverless-http basePath strips /api)
+app.use(apiRouter);
 
 // ── Error handler (must be last) ──────────────────────────
 app.use(errorHandler);
@@ -152,7 +131,6 @@ const isDirectRun = !isServerless && process.argv[1] && (
 );
 
 if (isDirectRun) {
-  await ensureLocalDb();
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);

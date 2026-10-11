@@ -4,7 +4,8 @@ import toast from 'react-hot-toast';
 import {
   HiOutlinePlus, HiOutlineTrash, HiOutlineLockClosed,
   HiOutlineEye, HiOutlineEyeOff, HiOutlineUpload,
-  HiOutlineLink,
+  HiOutlineLink, HiOutlineDownload, HiOutlineRefresh,
+  HiOutlineDatabase,
 } from 'react-icons/hi';
 
 const KNOWN_SOCIALS = [
@@ -37,22 +38,23 @@ export default function SettingsPage() {
   async function loadSettings() {
     try {
       const { data } = await settingsAPI.get();
+      const raw = data?.settings || data;
       setForm({
-        siteTitle: data?.site_title || 'Dev Anand — Video Editor & Motion Designer',
-        heroHeading: data?.hero_heading || 'Dev Anand',
-        heroSubheading: data?.hero_subheading || 'Video Editor · Motion Graphics · Color Grading',
-        heroStatement: data?.hero_statement || 'YOU SHOOT. / I CUT.',
-        availabilityStatus: data?.availability_status || 'Available for Projects',
-        accentColor: data?.accent_color || '#E5A93C',
-        email: data?.email || 'admin@devanand.com',
-        socialLinks: typeof data?.social_links === 'object' && data?.social_links !== null ? data.social_links : {},
-        footerText: data?.footer_text || '© Dev Anand. All rights reserved.',
-        metaTitle: data?.meta_title || 'Dev Anand — Video Editor & Motion Designer',
-        metaDescription: data?.meta_description || 'High-impact video editing, rhythmic pacing, and cinematic color grading.',
-        ogImageUrl: data?.og_image_url || '',
-        contactHeading: data?.contact_heading || 'Ready to Cut Your Next Masterpiece?',
-        contactSubheading: data?.contact_subheading || "Whether you need a dynamic commercial campaign, a high-converting short-form reel, or a nuanced color grade — let's collaborate.",
-        processSteps: Array.isArray(data?.process_steps) ? data.process_steps : [],
+        siteTitle: raw?.site_title || raw?.siteTitle || 'Dev Anand — Video Editor & Motion Designer',
+        heroHeading: raw?.hero_heading || raw?.heroHeading || 'Dev Anand',
+        heroSubheading: raw?.hero_subheading || raw?.heroSubheading || 'Video Editor · Motion Graphics · Color Grading',
+        heroStatement: raw?.hero_statement || raw?.heroStatement || 'YOU SHOOT. / I CUT.',
+        availabilityStatus: raw?.availability_status || raw?.availabilityStatus || 'Available for Projects',
+        accentColor: raw?.accent_color || raw?.accentColor || '#E5A93C',
+        email: raw?.email || 'admin@devanand.com',
+        socialLinks: typeof raw?.social_links === 'object' && raw?.social_links !== null ? raw.social_links : (typeof raw?.socialLinks === 'object' && raw?.socialLinks !== null ? raw.socialLinks : {}),
+        footerText: raw?.footer_text || raw?.footerText || '© Dev Anand. All rights reserved.',
+        metaTitle: raw?.meta_title || raw?.metaTitle || 'Dev Anand — Video Editor & Motion Designer',
+        metaDescription: raw?.meta_description || raw?.metaDescription || 'High-impact video editing, rhythmic pacing, and cinematic color grading.',
+        ogImageUrl: raw?.og_image_url || raw?.ogImageUrl || '',
+        contactHeading: raw?.contact_heading || raw?.contactHeading || 'Ready to Cut Your Next Masterpiece?',
+        contactSubheading: raw?.contact_subheading || raw?.contactSubheading || "Whether you need a dynamic commercial campaign, a high-converting short-form reel, or a nuanced color grade — let's collaborate.",
+        processSteps: Array.isArray(raw?.process_steps) ? raw.process_steps : (Array.isArray(raw?.processSteps) ? raw.processSteps : []),
       });
     } catch {
       toast.error('Failed to load settings');
@@ -64,6 +66,51 @@ export default function SettingsPage() {
   useEffect(() => {
     loadSettings();
   }, []);
+
+  function handleExportBackup() {
+    try {
+      const exportData = {
+        settings: form,
+        exportedAt: new Date().toISOString(),
+      };
+      const jsonStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `portfolio-settings-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Settings backup downloaded successfully!');
+    } catch (err) {
+      toast.error('Failed to export backup: ' + (err.message || 'Unknown error'));
+    }
+  }
+
+  function handleImportBackup(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const content = event.target?.result;
+        const parsed = JSON.parse(content);
+        const importedSettings = parsed?.settings || parsed;
+        if (!importedSettings || typeof importedSettings !== 'object') {
+          return toast.error('Invalid backup JSON format');
+        }
+        await settingsAPI.update(importedSettings);
+        toast.success('Settings imported and saved to database!');
+        loadSettings();
+      } catch (err) {
+        toast.error('Failed to parse or restore file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
 
   function handleChange(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -135,7 +182,38 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await settingsAPI.update(form);
+      const payload = {
+        ...form,
+        site_title: form.siteTitle,
+        siteTitle: form.siteTitle,
+        hero_heading: form.heroHeading,
+        heroHeading: form.heroHeading,
+        hero_subheading: form.heroSubheading,
+        heroSubheading: form.heroSubheading,
+        hero_statement: form.heroStatement,
+        heroStatement: form.heroStatement,
+        availability_status: form.availabilityStatus,
+        availabilityStatus: form.availabilityStatus,
+        accent_color: form.accentColor,
+        accentColor: form.accentColor,
+        social_links: form.socialLinks,
+        socialLinks: form.socialLinks,
+        footer_text: form.footerText,
+        footerText: form.footerText,
+        meta_title: form.metaTitle,
+        metaTitle: form.metaTitle,
+        meta_description: form.metaDescription,
+        metaDescription: form.metaDescription,
+        og_image_url: form.ogImageUrl,
+        ogImageUrl: form.ogImageUrl,
+        contact_heading: form.contactHeading,
+        contactHeading: form.contactHeading,
+        contact_subheading: form.contactSubheading,
+        contactSubheading: form.contactSubheading,
+        process_steps: form.processSteps,
+        processSteps: form.processSteps,
+      };
+      await settingsAPI.update(payload);
       toast.success('Settings saved successfully');
     } catch (err) {
       const msg = err.response?.data?.details?.[0] || err.response?.data?.error || 'Save failed';
@@ -467,6 +545,51 @@ export default function SettingsPage() {
           {saving ? 'Saving...' : 'Save Site Settings'}
         </button>
       </form>
+
+      {/* Database & Data Backup Section */}
+      <section className="admin-card border-border/80 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <HiOutlineDatabase className="w-5 h-5 text-accent" />
+            <div>
+              <h2 className="text-base font-display font-bold text-text-primary">Database & Settings Backup</h2>
+              <p className="text-xs text-text-muted">
+                Export and restore JSON backups of your site configuration. All changes saved in this panel go live immediately.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-border">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-mono font-semibold text-emerald-400">
+              LIVE NEON DATABASE
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          {/* Export JSON */}
+          <button
+            type="button"
+            onClick={handleExportBackup}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface border border-border hover:border-accent/40 text-xs font-medium text-text-primary transition-colors hover:bg-surface-hover cursor-pointer"
+          >
+            <HiOutlineDownload className="w-4 h-4 text-accent" />
+            <span>Export Settings Backup (JSON)</span>
+          </button>
+
+          {/* Import JSON */}
+          <label className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface border border-border hover:border-accent/40 text-xs font-medium text-text-primary transition-colors hover:bg-surface-hover cursor-pointer">
+            <HiOutlineUpload className="w-4 h-4 text-accent" />
+            <span>Import / Restore Settings</span>
+            <input
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImportBackup}
+            />
+          </label>
+        </div>
+      </section>
 
       {/* Admin Security: Password Management */}
       <section className="admin-card border-danger/20 space-y-4 pt-6">

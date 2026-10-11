@@ -2,7 +2,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename = typeof import.meta?.url === 'string'
+  ? fileURLToPath(import.meta.url)
+  : path.join(process.cwd(), 'server/src/db/clearData.js');
 const __dirname = path.dirname(__filename);
 
 // Ensure .env from server directory is loaded first

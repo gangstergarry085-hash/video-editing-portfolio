@@ -28,18 +28,19 @@ export default function AboutPage() {
   async function loadAbout() {
     try {
       const { data } = await aboutAPI.get();
+      const raw = data?.about || data;
       setForm({
-        name: data?.name || '',
-        role: data?.role || '',
-        bio: data?.bio || '',
-        experience: data?.experience || '',
-        location: data?.location || '',
-        availabilityStatus: data?.availability_status || '',
-        profileImageUrl: data?.profile_image_url || '',
-        socialLinks: typeof data?.social_links === 'object' && data?.social_links !== null ? data.social_links : {},
-        deliveriesStat: data?.deliveries_stat || '100% On-Time',
-        resolutionStat: data?.resolution_stat || '4K / 60FPS HDR',
-        tools: Array.isArray(data?.tools) ? data.tools : [],
+        name: raw?.name || '',
+        role: raw?.role || '',
+        bio: raw?.bio || '',
+        experience: raw?.experience || '',
+        location: raw?.location || '',
+        availabilityStatus: raw?.availability_status || raw?.availabilityStatus || '',
+        profileImageUrl: raw?.profile_image_url || raw?.profileImageUrl || raw?.avatar_url || '',
+        socialLinks: typeof raw?.social_links === 'object' && raw?.social_links !== null ? raw.social_links : (typeof raw?.socialLinks === 'object' && raw?.socialLinks !== null ? raw.socialLinks : {}),
+        deliveriesStat: raw?.deliveries_stat || raw?.deliveriesStat || '100% On-Time',
+        resolutionStat: raw?.resolution_stat || raw?.resolutionStat || '4K / 60FPS HDR',
+        tools: Array.isArray(raw?.tools) ? raw.tools : [],
       });
     } catch {
       toast.error('Failed to load about data');
@@ -108,7 +109,21 @@ export default function AboutPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await aboutAPI.update(form);
+      const payload = {
+        ...form,
+        availability_status: form.availabilityStatus,
+        availabilityStatus: form.availabilityStatus,
+        profile_image_url: form.profileImageUrl,
+        profileImageUrl: form.profileImageUrl,
+        avatar_url: form.profileImageUrl,
+        social_links: form.socialLinks,
+        socialLinks: form.socialLinks,
+        deliveries_stat: form.deliveriesStat,
+        deliveriesStat: form.deliveriesStat,
+        resolution_stat: form.resolutionStat,
+        resolutionStat: form.resolutionStat,
+      };
+      await aboutAPI.update(payload);
       toast.success('About details saved successfully');
     } catch (err) {
       const msg = err.response?.data?.details?.[0] || err.response?.data?.error || 'Save failed';

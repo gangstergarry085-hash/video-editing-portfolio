@@ -4,17 +4,16 @@ import { fileURLToPath } from 'url';
 import pool from '../config/db.js';
 import dotenv from 'dotenv';
 
-import { ensureLocalDb } from './ensureLocalDb.js';
-
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename = typeof import.meta?.url === 'string'
+  ? fileURLToPath(import.meta.url)
+  : path.join(process.cwd(), 'server/src/db/migrate.js');
 const __dirname = path.dirname(__filename);
 
 const migrationsDir = path.join(__dirname, 'migrations');
 
 async function migrate() {
-  await ensureLocalDb();
   const client = await pool.connect();
 
   try {

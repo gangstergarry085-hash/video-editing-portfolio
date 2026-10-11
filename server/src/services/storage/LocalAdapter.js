@@ -3,20 +3,31 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename = typeof import.meta?.url === 'string'
+  ? fileURLToPath(import.meta.url)
+  : path.join(process.cwd(), 'server/src/services/storage/LocalAdapter.js');
 const __dirname = path.dirname(__filename);
-
-const UPLOADS_DIR = path.join(__dirname, '..', '..', '..', 'uploads');
+const isServerless = Boolean(
+  process.env.NETLIFY ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.LAMBDA_TASK_ROOT
+);
+const UPLOADS_DIR = isServerless
+  ? path.join('/tmp', 'uploads')
+  : path.join(__dirname, '..', '..', '..', 'uploads');
 
 /**
  * Local filesystem storage adapter.
- * Stores files in /server/uploads/ and serves via Express static middleware.
+ * Stores files in /server/uploads/ (or /tmp/uploads in serverless) and serves via Express static middleware.
  */
 export class LocalAdapter {
   constructor() {
-    // Ensure uploads directory exists
-    if (!fs.existsSync(UPLOADS_DIR)) {
-      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    try {
+      if (!fs.existsSync(UPLOADS_DIR)) {
+        fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+      }
+    } catch (e) {
+      console.warn('Local uploads dir notice:', e.message);
     }
   }
 

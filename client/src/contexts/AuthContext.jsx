@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../lib/api';
+import { authAPI, setToken, clearToken, getToken } from '../lib/api';
 
 const AuthContext = createContext(null);
 
@@ -8,11 +8,19 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   async function checkAuth() {
+    // If no token stored, skip the API call
+    if (!getToken()) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data } = await authAPI.me();
       setUser(data.user);
     } catch {
       setUser(null);
+      clearToken();
     } finally {
       setLoading(false);
     }
@@ -24,13 +32,19 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     const { data } = await authAPI.login(email, password);
+    setToken(data.token);
     setUser(data.user);
     return data;
   }
 
   async function logout() {
-    await authAPI.logout();
+    clearToken();
     setUser(null);
+    try {
+      await authAPI.logout();
+    } catch {
+      // Ignore — token already cleared client-side
+    }
   }
 
   return (

@@ -47,9 +47,9 @@ export default function BeforeAfterPage() {
     setForm({
       title: item.title || '',
       description: item.description || '',
-      rawMediaUrl: item.raw_media_url || '',
-      finalMediaUrl: item.final_media_url || '',
-      thumbnailUrl: item.thumbnail_url || '',
+      rawMediaUrl: item.raw_media_url || item.rawMediaUrl || '',
+      finalMediaUrl: item.final_media_url || item.finalMediaUrl || '',
+      thumbnailUrl: item.thumbnail_url || item.thumbnailUrl || '',
       published: Boolean(item.published),
     });
     setEditingItem(item);
@@ -67,11 +67,20 @@ export default function BeforeAfterPage() {
     if (!form.title.trim()) return toast.error('Title is required');
     setSaving(true);
     try {
+      const payload = {
+        ...form,
+        raw_media_url: form.rawMediaUrl,
+        rawMediaUrl: form.rawMediaUrl,
+        final_media_url: form.finalMediaUrl,
+        finalMediaUrl: form.finalMediaUrl,
+        thumbnail_url: form.thumbnailUrl,
+        thumbnailUrl: form.thumbnailUrl,
+      };
       if (editingItem) {
-        await beforeAfterAPI.update(editingItem.id, form);
+        await beforeAfterAPI.update(editingItem.id, payload);
         toast.success('Comparison updated');
       } else {
-        await beforeAfterAPI.create(form);
+        await beforeAfterAPI.create(payload);
         toast.success('Comparison created');
       }
       setShowForm(false);

@@ -2,14 +2,11 @@ import bcrypt from 'bcryptjs';
 import pool from '../config/db.js';
 import dotenv from 'dotenv';
 
-import { ensureLocalDb } from './ensureLocalDb.js';
-
 dotenv.config();
 
 const SALT_ROUNDS = 12;
 
 async function seed() {
-  await ensureLocalDb();
   const client = await pool.connect();
   const adminOnly = process.argv.includes('--admin-only');
 

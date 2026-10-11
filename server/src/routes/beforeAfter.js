@@ -11,10 +11,13 @@ const beforeAfterSchema = Joi.object({
   title: Joi.string().max(255).required(),
   description: Joi.string().allow('', null),
   rawMediaUrl: Joi.string().allow('', null),
+  raw_media_url: Joi.string().allow('', null),
   finalMediaUrl: Joi.string().allow('', null),
+  final_media_url: Joi.string().allow('', null),
   thumbnailUrl: Joi.string().allow('', null),
+  thumbnail_url: Joi.string().allow('', null),
   published: Joi.boolean().default(false),
-});
+}).unknown(true);
 
 // ── Public ────────────────────────────────────────────────
 
@@ -52,10 +55,16 @@ router.post('/', requireAuth, validate(beforeAfterSchema), async (req, res, next
       'SELECT COALESCE(MAX(display_order), -1) + 1 AS next_order FROM before_after'
     );
 
+    const rawMediaUrl = data.rawMediaUrl ?? data.raw_media_url ?? null;
+    const finalMediaUrl = data.finalMediaUrl ?? data.final_media_url ?? null;
+    const thumbnailUrl = data.thumbnailUrl ?? data.thumbnail_url ?? null;
+    const description = data.description ?? '';
+    const published = Boolean(data.published);
+
     const { rows } = await pool.query(`
       INSERT INTO before_after (title, description, raw_media_url, final_media_url, thumbnail_url, published, display_order)
       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *
-    `, [data.title, data.description, data.rawMediaUrl, data.finalMediaUrl, data.thumbnailUrl, data.published, maxOrder[0].next_order]);
+    `, [data.title, description, rawMediaUrl, finalMediaUrl, thumbnailUrl, published, maxOrder[0].next_order]);
 
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -96,12 +105,25 @@ router.put('/admin/reorder', requireAuth, async (req, res, next) => {
 router.put('/:id', requireAuth, validate(beforeAfterSchema), async (req, res, next) => {
   try {
     const data = req.body;
+    const { rows: existingRows } = await pool.query('SELECT * FROM before_after WHERE id = $1', [req.params.id]);
+    if (existingRows.length === 0) {
+      return next(createError(404, 'Item not found'));
+    }
+    const existing = existingRows[0];
+
+    const title = data.title ?? existing.title;
+    const description = data.description !== undefined ? data.description : existing.description;
+    const rawMediaUrl = data.rawMediaUrl ?? data.raw_media_url ?? existing.raw_media_url;
+    const finalMediaUrl = data.finalMediaUrl ?? data.final_media_url ?? existing.final_media_url;
+    const thumbnailUrl = data.thumbnailUrl ?? data.thumbnail_url ?? existing.thumbnail_url;
+    const published = data.published !== undefined ? Boolean(data.published) : existing.published;
+
     const { rows } = await pool.query(`
       UPDATE before_after SET
         title = $1, description = $2, raw_media_url = $3,
         final_media_url = $4, thumbnail_url = $5, published = $6, updated_at = NOW()
       WHERE id = $7 RETURNING *
-    `, [data.title, data.description, data.rawMediaUrl, data.finalMediaUrl, data.thumbnailUrl, data.published, req.params.id]);
+    `, [title, description, rawMediaUrl, finalMediaUrl, thumbnailUrl, published, req.params.id]);
 
     if (rows.length === 0) return next(createError(404, 'Entry not found'));
     res.json(rows[0]);

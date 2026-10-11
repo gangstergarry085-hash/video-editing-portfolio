@@ -32,10 +32,18 @@ const emptyForm = {
   published: false,
 };
 
-function MediaField({ label, field, accept, type = 'video', value, isUploading, uploadPercent, onChange, onUpload }) {
+function MediaField({ label, field, accept, type = 'video', aspect = '16:9', value, isUploading, uploadPercent, onChange, onUpload }) {
+  const isVertical = aspect === '9:16' || field === 'mobileVideoUrl';
   return (
     <div className="space-y-2">
-      <label className="admin-label">{label}</label>
+      <div className="flex items-center justify-between">
+        <label className="admin-label">{label}</label>
+        {isVertical && (
+          <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded bg-accent/15 border border-accent/30 text-accent font-semibold tracking-wider">
+            9:16 Vertical Cut
+          </span>
+        )}
+      </div>
 
       {/* Paste URL Input */}
       <div className="flex gap-2">
@@ -45,7 +53,11 @@ function MediaField({ label, field, accept, type = 'video', value, isUploading, 
             type="text"
             value={value || ''}
             onChange={(e) => onChange(field, e.target.value)}
-            placeholder={type === 'video' ? 'Paste YouTube, Vimeo, or direct MP4 URL' : 'Paste image URL (https://...)'}
+            placeholder={
+              isVertical
+                ? 'Paste vertical YouTube Short, TikTok, Instagram Reel, or direct MP4 URL'
+                : (type === 'video' ? 'Paste YouTube, Vimeo, or direct MP4 URL' : 'Paste image URL (https://...)')
+            }
             className="admin-input pl-10 text-xs"
           />
         </div>
@@ -75,7 +87,7 @@ function MediaField({ label, field, accept, type = 'video', value, isUploading, 
       ) : (
         <label className="admin-card p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-accent/40 transition-colors">
           <HiOutlineUpload className="w-4 h-4 text-accent" />
-          <span className="text-xs text-text-secondary">Or choose {type === 'video' ? 'video file' : 'image'} to upload</span>
+          <span className="text-xs text-text-secondary">Or choose {type === 'video' ? (isVertical ? 'vertical video file (.mp4)' : 'video file') : 'image'} to upload</span>
           <input
             type="file"
             accept={accept}
@@ -87,14 +99,25 @@ function MediaField({ label, field, accept, type = 'video', value, isUploading, 
 
       {/* Live Preview if value provided */}
       {value && (
-        <div className="mt-2 rounded-xl overflow-hidden bg-surface border border-border max-w-sm">
-          {type === 'image' ? (
-            <img src={value} alt="" className="w-full h-32 object-cover" />
-          ) : (
-            <div className="aspect-video">
-              <VideoPlayer url={value} className="w-full h-full object-cover" />
-            </div>
-          )}
+        <div className="pt-2">
+          <div className="flex items-center justify-between text-[11px] font-mono text-text-muted mb-1.5">
+            <span className="text-accent flex items-center gap-1.5 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+              {isVertical ? '9:16 VERTICAL REEL PREVIEW' : '16:9 LANDSCAPE PREVIEW'}
+            </span>
+            <span>{isVertical ? '1080 × 1920 PORTRAIT' : '1920 × 1080 CINEMA'}</span>
+          </div>
+          <div className={`rounded-2xl overflow-hidden bg-surface border border-border shadow-xl ${
+            isVertical ? 'w-48 sm:w-56 aspect-[9/16] mx-auto border-accent/40 ring-4 ring-black/30' : 'aspect-video max-w-sm'
+          }`}>
+            {type === 'image' ? (
+              <img src={value} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full">
+                <VideoPlayer url={value} className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -118,10 +141,11 @@ export default function ProjectFormPage() {
       let project = null;
       try {
         const { data } = await projectsAPI.getById(id);
-        project = data;
+        project = data?.project || data;
       } catch {
         const { data: all } = await projectsAPI.adminList({});
-        project = all.find((p) => p.id === parseInt(id));
+        const list = Array.isArray(all) ? all : (all?.projects || []);
+        project = list.find((p) => String(p.id) === String(id));
       }
 
       if (!project) {
@@ -134,17 +158,17 @@ export default function ProjectFormPage() {
         title: project.title || '',
         category: project.category || 'Cinematic',
         description: project.description || '',
-        shortDescription: project.short_description || '',
-        videoUrl: project.video_url || '',
-        thumbnailUrl: project.thumbnail_url || '',
-        mobileVideoUrl: project.mobile_video_url || '',
+        shortDescription: project.short_description || project.shortDescription || '',
+        videoUrl: project.video_url || project.videoUrl || '',
+        thumbnailUrl: project.thumbnail_url || project.thumbnailUrl || '',
+        mobileVideoUrl: project.mobile_video_url || project.mobileVideoUrl || '',
         tools: Array.isArray(project.tools) ? project.tools : [],
-        clientName: project.client_name || '',
-        clientDescription: project.client_description || '',
-        devRole: project.dev_role || '',
-        servicesProvided: Array.isArray(project.services_provided) ? project.services_provided : [],
-        projectYear: project.project_year || new Date().getFullYear(),
-        projectType: project.project_type || '',
+        clientName: project.client_name || project.clientName || '',
+        clientDescription: project.client_description || project.clientDescription || '',
+        devRole: project.dev_role || project.devRole || '',
+        servicesProvided: Array.isArray(project.services_provided) ? project.services_provided : (Array.isArray(project.servicesProvided) ? project.servicesProvided : []),
+        projectYear: project.project_year || project.projectYear || new Date().getFullYear(),
+        projectType: project.project_type || project.projectType || '',
         featured: Boolean(project.featured),
         published: Boolean(project.published),
       });
@@ -194,9 +218,16 @@ export default function ProjectFormPage() {
         setUploading((prev) => ({ ...prev, [field]: progress }));
       });
       handleChange(field, data.url);
-      toast.success('File uploaded successfully');
+      if (data?.url?.startsWith('blob:')) {
+        toast('Local preview loaded. For public visitors to watch online, paste a YouTube, Vimeo, or CDN link.', {
+          icon: 'ℹ️',
+          duration: 6000,
+        });
+      } else {
+        toast.success('File uploaded successfully');
+      }
     } catch {
-      toast.error('Upload failed');
+      toast.error('Upload failed. Paste a YouTube or Vimeo link directly.');
     } finally {
       setUploading((prev) => {
         const next = { ...prev };
@@ -214,7 +245,30 @@ export default function ProjectFormPage() {
 
     setSaving(true);
     try {
-      const payload = { ...form, published: asPublished };
+      const payload = {
+        ...form,
+        short_description: form.shortDescription,
+        shortDescription: form.shortDescription,
+        video_url: form.videoUrl,
+        videoUrl: form.videoUrl,
+        thumbnail_url: form.thumbnailUrl,
+        thumbnailUrl: form.thumbnailUrl,
+        mobile_video_url: form.mobileVideoUrl,
+        mobileVideoUrl: form.mobileVideoUrl,
+        client_name: form.clientName,
+        clientName: form.clientName,
+        client_description: form.clientDescription,
+        clientDescription: form.clientDescription,
+        dev_role: form.devRole,
+        devRole: form.devRole,
+        services_provided: form.servicesProvided,
+        servicesProvided: form.servicesProvided,
+        project_year: form.projectYear,
+        projectYear: form.projectYear,
+        project_type: form.projectType,
+        projectType: form.projectType,
+        published: asPublished,
+      };
 
       if (isEdit) {
         await projectsAPI.update(id, payload);
@@ -345,8 +399,9 @@ export default function ProjectFormPage() {
           <MediaField
             label="Vertical Reel / Mobile Cut (9:16 Portrait - Optional)"
             field="mobileVideoUrl"
-            accept="video/mp4,video/webm"
+            accept="video/mp4,video/webm,video/quicktime"
             type="video"
+            aspect="9:16"
             value={form.mobileVideoUrl}
             isUploading={uploading.mobileVideoUrl !== undefined}
             uploadPercent={uploading.mobileVideoUrl}

@@ -57,9 +57,16 @@ export default function ShowreelPage() {
       } else {
         handleChange(id, field === 'videoUrl' ? 'video_url' : 'thumbnail_url', data.url);
       }
-      toast.success('Uploaded successfully');
+      if (data?.url?.startsWith('blob:')) {
+        toast('Local preview loaded. For public visitors to watch online, paste a YouTube, Vimeo, or CDN link.', {
+          icon: 'ℹ️',
+          duration: 6000,
+        });
+      } else {
+        toast.success('Uploaded successfully');
+      }
     } catch {
-      toast.error('Upload failed');
+      toast.error('Upload failed. Paste a YouTube or Vimeo link directly.');
     } finally {
       setUploading((prev) => {
         const next = { ...prev };
@@ -73,11 +80,17 @@ export default function ShowreelPage() {
     setSaving(true);
     try {
       await showreelAPI.update(showreel.id, {
-        videoUrl: showreel.video_url || '',
-        thumbnailUrl: showreel.thumbnail_url || '',
-        title: showreel.title || '',
+        ...showreel,
+        videoUrl: showreel.video_url || showreel.videoUrl || '',
+        video_url: showreel.video_url || showreel.videoUrl || '',
+        thumbnailUrl: showreel.thumbnail_url || showreel.thumbnailUrl || '',
+        thumbnail_url: showreel.thumbnail_url || showreel.thumbnailUrl || '',
+        title: showreel.title || 'The 2024 Reel',
         description: showreel.description || '',
-        active: Boolean(showreel.active),
+        aspect_ratio: showreel.aspect_ratio || showreel.aspectRatio || '16:9',
+        aspectRatio: showreel.aspect_ratio || showreel.aspectRatio || '16:9',
+        active: Boolean(showreel.active ?? showreel.is_active),
+        is_active: Boolean(showreel.active ?? showreel.is_active),
       });
       toast.success('Showreel saved');
       await loadShowreels();
@@ -95,7 +108,17 @@ export default function ShowreelPage() {
     }
     setSaving(true);
     try {
-      await showreelAPI.create(newReel);
+      await showreelAPI.create({
+        ...newReel,
+        video_url: newReel.videoUrl,
+        videoUrl: newReel.videoUrl,
+        thumbnail_url: newReel.thumbnailUrl,
+        thumbnailUrl: newReel.thumbnailUrl,
+        aspect_ratio: newReel.aspect_ratio || '16:9',
+        aspectRatio: newReel.aspect_ratio || '16:9',
+        is_active: Boolean(newReel.active),
+        active: Boolean(newReel.active),
+      });
       toast.success('Showreel created');
       setShowNewModal(false);
       setNewReel({
@@ -103,6 +126,7 @@ export default function ShowreelPage() {
         description: '',
         videoUrl: '',
         thumbnailUrl: '',
+        aspect_ratio: '16:9',
         active: showreels.length === 0,
       });
       await loadShowreels();
@@ -220,6 +244,20 @@ export default function ShowreelPage() {
                     className="admin-input resize-y"
                   />
                 </div>
+                <div>
+                  <label className="admin-label">Aspect Ratio / Layout Format</label>
+                  <select
+                    value={showreel.aspect_ratio || showreel.aspectRatio || '16:9'}
+                    onChange={(e) => {
+                      handleChange(showreel.id, 'aspect_ratio', e.target.value);
+                      handleChange(showreel.id, 'aspectRatio', e.target.value);
+                    }}
+                    className="admin-input cursor-pointer"
+                  >
+                    <option value="16:9">16:9 Cinema Landscape (Standard)</option>
+                    <option value="9:16">9:16 Vertical Reel (Mobile Cut / Shorts / Reels)</option>
+                  </select>
+                </div>
               </div>
 
               {/* Video URL & File Upload */}
@@ -315,8 +353,17 @@ export default function ShowreelPage() {
               {/* Live Preview Box */}
               {showreel.video_url && (
                 <div>
-                  <label className="admin-label text-xs text-text-muted">Live Player Preview</label>
-                  <div className="rounded-xl overflow-hidden aspect-video max-w-lg bg-surface border border-border">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="admin-label text-xs text-text-muted mb-0">Live Player Preview</label>
+                    <span className="text-[10px] font-mono text-accent uppercase font-bold">
+                      {showreel.aspect_ratio === '9:16' ? '9:16 VERTICAL FORMAT' : '16:9 CINEMA FORMAT'}
+                    </span>
+                  </div>
+                  <div className={`rounded-xl overflow-hidden bg-surface border border-border shadow-lg ${
+                    showreel.aspect_ratio === '9:16'
+                      ? 'w-48 sm:w-56 aspect-[9/16] mx-auto border-accent/40 ring-4 ring-black/30'
+                      : 'aspect-video max-w-lg'
+                  }`}>
                     <VideoPlayer
                       url={showreel.video_url}
                       poster={showreel.thumbnail_url}

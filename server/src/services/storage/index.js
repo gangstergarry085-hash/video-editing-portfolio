@@ -10,7 +10,13 @@ let storageInstance = null;
 export function getStorage() {
   if (storageInstance) return storageInstance;
 
-  const provider = (process.env.STORAGE_PROVIDER || 'local').toLowerCase();
+  const hasCloudinary = Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
+  );
+
+  const provider = (process.env.STORAGE_PROVIDER || (hasCloudinary ? 'cloudinary' : 'local')).toLowerCase();
 
   switch (provider) {
     case 'cloudinary':
