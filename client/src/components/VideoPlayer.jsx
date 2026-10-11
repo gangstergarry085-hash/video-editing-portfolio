@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 
 /**
  * Universal Video Player Component
- * Automatically detects and handles YouTube, Vimeo, and direct video files (.mp4, .webm, .mov, /uploads/...)
+ * Automatically detects and handles YouTube, Vimeo, Google Drive, and direct video files (.mp4, .webm, .mov)
+ * Google Drive videos stream cleanly via native HTML5 video with full mobile/vertical support
  */
 export default function VideoPlayer({
   url,
@@ -15,6 +16,7 @@ export default function VideoPlayer({
   muted = false,
 }) {
   const [hasError, setHasError] = useState(false);
+  const [useIframeFallback, setUseIframeFallback] = useState(false);
 
   const videoMeta = useMemo(() => {
     if (!url || typeof url !== 'string') return null;
@@ -46,9 +48,13 @@ export default function VideoPlayer({
       /(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i
     );
     if (gDriveMatch && gDriveMatch[1]) {
+      const fileId = gDriveMatch[1];
       return {
         type: 'googledrive',
-        embedUrl: `https://drive.google.com/file/d/${gDriveMatch[1]}/preview`,
+        fileId,
+        // Stream directly using Google Drive's content CDN for clean native HTML5 video
+        src: `https://drive.usercontent.google.com/download?id=${fileId}&export=download`,
+        embedUrl: `https://drive.google.com/file/d/${fileId}/preview`,
       };
     }
 
@@ -60,15 +66,21 @@ export default function VideoPlayer({
   }, [url, autoPlay, muted, loop]);
 
   const resolvedPoster = useMemo(() => {
-    if (!poster || typeof poster !== 'string') return poster;
-    const match = poster.trim().match(
-      /(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i
-    );
-    if (match && match[1]) {
-      return `https://lh3.googleusercontent.com/d/${match[1]}`;
+    if (poster && typeof poster === 'string') {
+      const match = poster.trim().match(
+        /(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i
+      );
+      if (match && match[1]) {
+        return `https://lh3.googleusercontent.com/d/${match[1]}`;
+      }
+      return poster;
     }
-    return poster;
-  }, [poster]);
+    // Auto-generate clean high-res poster from Google Drive video if no poster set
+    if (videoMeta?.type === 'googledrive' && videoMeta?.fileId) {
+      return `https://lh3.googleusercontent.com/d/${videoMeta.fileId}`;
+    }
+    return null;
+  }, [poster, videoMeta]);
 
   if (!url || !videoMeta || hasError) {
     if (resolvedPoster) {
@@ -84,7 +96,8 @@ export default function VideoPlayer({
     return null;
   }
 
-  if (videoMeta.type === 'youtube' || videoMeta.type === 'vimeo' || videoMeta.type === 'googledrive') {
+  // Only YouTube, Vimeo, or fallback Google Drive render an iframe
+  if (videoMeta.type === 'youtube' || videoMeta.type === 'vimeo' || (videoMeta.type === 'googledrive' && useIframeFallback)) {
     return (
       <iframe
         src={videoMeta.embedUrl}
@@ -96,6 +109,7 @@ export default function VideoPlayer({
     );
   }
 
+  // Google Drive & direct files play via native HTML5 video (clean mobile controls, zero clutter)
   return (
     <video
       src={videoMeta.src}
@@ -106,7 +120,14 @@ export default function VideoPlayer({
       muted={muted}
       playsInline
       preload="metadata"
-      onError={() => setHasError(true)}
+      onError={() => {
+        // If direct stream fails (e.g. >100MB file limit), gracefully fall back to preview iframe
+        if (videoMeta.type === 'googledrive' && !useIframeFallback) {
+          setUseIframeFallback(true);
+        } else {
+          setHasError(true);
+        }
+      }}
       className={className}
     />
   );
