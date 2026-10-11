@@ -94,12 +94,53 @@ const FALLBACK_PROCESS = [
 export default function HomePage() {
   const context = useOutletContext() || {};
   const settings = context.settings;
-  const [loading, setLoading] = useState(true);
-  const [showreel, setShowreel] = useState(null);
-  const [allProjects, setAllProjects] = useState([]);
-  const [beforeAfter, setBeforeAfter] = useState([]);
-  const [services, setServices] = useState([]);
-  const [about, setAbout] = useState(null);
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !localStorage.getItem('dev_portfolio_settings');
+    } catch {
+      return true;
+    }
+  });
+  const [showreel, setShowreel] = useState(() => {
+    try {
+      const c = localStorage.getItem('dev_portfolio_showreel');
+      return c ? JSON.parse(c) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [allProjects, setAllProjects] = useState(() => {
+    try {
+      const c = localStorage.getItem('dev_portfolio_projects');
+      return c ? JSON.parse(c) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [beforeAfter, setBeforeAfter] = useState(() => {
+    try {
+      const c = localStorage.getItem('dev_portfolio_before_after');
+      return c ? JSON.parse(c) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [services, setServices] = useState(() => {
+    try {
+      const c = localStorage.getItem('dev_portfolio_services');
+      return c ? JSON.parse(c) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [about, setAbout] = useState(() => {
+    try {
+      const c = localStorage.getItem('dev_portfolio_about');
+      return c ? JSON.parse(c) : null;
+    } catch {
+      return null;
+    }
+  });
   const [activeCategory, setActiveCategory] = useState('All');
 
   const effectiveAbout = context.about || about;
@@ -117,27 +158,43 @@ export default function HomePage() {
           ? srRes.value.data.showreel
           : srRes.value.data;
         setShowreel(sr || null);
+        try {
+          if (sr) localStorage.setItem('dev_portfolio_showreel', JSON.stringify(sr));
+        } catch {}
       }
       if (apRes.status === 'fulfilled') {
         const list = Array.isArray(apRes.value.data)
           ? apRes.value.data
           : (apRes.value.data?.projects || []);
         setAllProjects(list);
+        try {
+          localStorage.setItem('dev_portfolio_projects', JSON.stringify(list));
+        } catch {}
       }
       if (baRes.status === 'fulfilled') {
         const baList = Array.isArray(baRes.value.data)
           ? baRes.value.data
           : (baRes.value.data?.items || []);
         setBeforeAfter(baList);
+        try {
+          localStorage.setItem('dev_portfolio_before_after', JSON.stringify(baList));
+        } catch {}
       }
       if (svRes.status === 'fulfilled') {
         const svList = Array.isArray(svRes.value.data)
           ? svRes.value.data
           : (svRes.value.data?.services || []);
         setServices(svList);
+        try {
+          localStorage.setItem('dev_portfolio_services', JSON.stringify(svList));
+        } catch {}
       }
       if (abRes.status === 'fulfilled' && abRes.value.data) {
-        setAbout(abRes.value.data?.about || abRes.value.data);
+        const abData = abRes.value.data?.about || abRes.value.data;
+        setAbout(abData);
+        try {
+          localStorage.setItem('dev_portfolio_about', JSON.stringify(abData));
+        } catch {}
       }
     }).finally(() => {
       setLoading(false);
@@ -157,7 +214,19 @@ export default function HomePage() {
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -50]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.18], [1, 0]);
 
+  if (loading && !settings && allProjects.length === 0) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+          <span className="text-text-muted text-xs font-mono tracking-wider">LOADING TIMELINE...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
+
     <>
       {/* ── HERO SECTION ──────────────────────────────── */}
       <section

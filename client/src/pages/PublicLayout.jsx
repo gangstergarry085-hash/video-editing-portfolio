@@ -5,22 +5,37 @@ import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 
 export default function PublicLayout() {
-  const [settings, setSettings] = useState(null);
-  const [about, setAbout] = useState(null);
+  const [settings, setSettings] = useState(() => {
+    try {
+      const cached = localStorage.getItem('dev_portfolio_settings');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [about, setAbout] = useState(() => {
+    try {
+      const cached = localStorage.getItem('dev_portfolio_about');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
   const glowRef = useRef(null);
 
   useEffect(() => {
     Promise.allSettled([settingsAPI.get(), aboutAPI.get()]).then(([sRes, aRes]) => {
       if (sRes.status === 'fulfilled' && sRes.value.data) {
-        setSettings((prev) => {
-          // Merge with any unsaved local edits
-          return { ...sRes.value.data, ...(prev || {}) };
-        });
+        try {
+          localStorage.setItem('dev_portfolio_settings', JSON.stringify(sRes.value.data));
+        } catch {}
+        setSettings(sRes.value.data);
       }
       if (aRes.status === 'fulfilled' && aRes.value.data) {
-        setAbout((prev) => {
-          return { ...aRes.value.data, ...(prev || {}) };
-        });
+        try {
+          localStorage.setItem('dev_portfolio_about', JSON.stringify(aRes.value.data));
+        } catch {}
+        setAbout(aRes.value.data);
       }
     });
   }, []);
