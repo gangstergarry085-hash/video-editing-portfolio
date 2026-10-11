@@ -99,13 +99,29 @@ export default function VideoPlayer({
   // Only YouTube, Vimeo, or fallback Google Drive render an iframe
   if (videoMeta.type === 'youtube' || videoMeta.type === 'vimeo' || (videoMeta.type === 'googledrive' && useIframeFallback)) {
     return (
-      <iframe
-        src={videoMeta.embedUrl}
-        title={title}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowFullScreen
-        className={`w-full h-full border-0 ${className}`}
-      />
+      <div className="relative w-full h-full group">
+        <iframe
+          src={videoMeta.embedUrl}
+          title={title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          className={`w-full h-full border-0 ${className}`}
+        />
+        {videoMeta.type === 'googledrive' && (
+          <a
+            href={`https://drive.google.com/file/d/${videoMeta.fileId}/view`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute top-3 right-3 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/85 hover:bg-black text-white hover:text-accent border border-white/20 text-[10px] font-mono tracking-wider shadow-xl transition-all duration-200 backdrop-blur-md active:scale-95"
+            title="Open clean Fullscreen"
+          >
+            <span>FULLSCREEN HD</span>
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        )}
+      </div>
     );
   }
 

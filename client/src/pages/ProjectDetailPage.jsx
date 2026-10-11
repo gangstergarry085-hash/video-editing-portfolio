@@ -6,6 +6,8 @@ import VideoPlayer from '../components/VideoPlayer';
 import {
   HiOutlineArrowLeft,
   HiOutlineAdjustmentsHorizontal,
+  HiPlay,
+  HiOutlineArrowTopRightOnSquare,
 } from 'react-icons/hi2';
 
 const COLORIST_NODES = [
@@ -79,6 +81,13 @@ export default function ProjectDetailPage() {
   const hasBoth = hasLandscape && hasVertical;
   const isVerticalActive = activeCut === 'vertical' || (!hasLandscape && hasVertical);
   const currentVideoUrl = isVerticalActive ? project.mobile_video_url : project.video_url;
+  const isGoogleDrive = Boolean(currentVideoUrl && currentVideoUrl.includes('drive.google.com'));
+  const gDriveViewUrl = isGoogleDrive
+    ? (() => {
+        const match = currentVideoUrl.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i);
+        return match ? `https://drive.google.com/file/d/${match[1]}/view` : currentVideoUrl;
+      })()
+    : null;
 
   return (
     <div className="min-h-screen pt-28 pb-24 px-6 relative overflow-hidden">
@@ -175,23 +184,61 @@ export default function ProjectDetailPage() {
         >
           {isVerticalActive ? (
             /* 9:16 Smartphone Showcase Frame */
-            <div className="w-full max-w-xs sm:max-w-sm aspect-[9/16] rounded-3xl overflow-hidden bg-black border-2 border-border/80 shadow-[0_25px_60px_rgba(0,0,0,0.8)] relative group ring-4 ring-black/40">
-              <VideoPlayer
-                url={currentVideoUrl}
-                poster={project.thumbnail_url}
-                title={`${project.title} (Vertical Reel)`}
-                className="w-full h-full object-cover"
-              />
+            <div className="w-full max-w-xs sm:max-w-sm flex flex-col items-center">
+              <div className="w-full aspect-[9/16] rounded-3xl overflow-hidden bg-black border-2 border-border/80 shadow-[0_25px_60px_rgba(0,0,0,0.8)] relative group ring-4 ring-black/40">
+                <VideoPlayer
+                  url={currentVideoUrl}
+                  poster={project.thumbnail_url}
+                  title={`${project.title} (Vertical Reel)`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Prominent Clean Fullscreen Action for Mobile */}
+              {isGoogleDrive && (
+                <div className="mt-4 flex flex-col items-center gap-2 text-center w-full">
+                  <a
+                    href={gDriveViewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full bg-gradient-to-r from-accent via-accent-hover to-accent text-surface font-display font-bold text-xs uppercase tracking-wider shadow-[0_0_25px_rgba(var(--accent-rgb),0.35)] hover:shadow-[0_0_40px_rgba(var(--accent-rgb),0.55)] transition-all duration-300 hover:scale-105 active:scale-95 group w-full max-w-xs"
+                  >
+                    <HiPlay className="w-4 h-4 ml-0.5" />
+                    <span>Watch in Clean Fullscreen</span>
+                    <HiOutlineArrowTopRightOnSquare className="w-3.5 h-3.5 opacity-80 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </a>
+                  <span className="text-[11px] font-mono text-text-muted">
+                    Tap to play without overlapping buttons
+                  </span>
+                </div>
+              )}
             </div>
           ) : currentVideoUrl ? (
             /* 16:9 Landscape Cinema Frame */
-            <div className="rounded-2xl overflow-hidden aspect-video bg-surface-card border border-border/80 shadow-2xl relative group">
-              <VideoPlayer
-                url={currentVideoUrl}
-                poster={project.thumbnail_url}
-                title={project.title}
-                className="w-full h-full object-cover"
-              />
+            <div className="w-full flex flex-col items-center">
+              <div className="w-full rounded-2xl overflow-hidden aspect-video bg-surface-card border border-border/80 shadow-2xl relative group">
+                <VideoPlayer
+                  url={currentVideoUrl}
+                  poster={project.thumbnail_url}
+                  title={project.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {isGoogleDrive && (
+                <div className="mt-4 flex items-center justify-center">
+                  <a
+                    href={gDriveViewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass border border-accent/40 text-accent hover:bg-accent hover:text-surface transition-all text-xs font-mono tracking-wider uppercase group"
+                  >
+                    <HiPlay className="w-3.5 h-3.5" />
+                    <span>Open in Clean Fullscreen Player</span>
+                    <HiOutlineArrowTopRightOnSquare className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </a>
+                </div>
+              )}
             </div>
           ) : (
             <div className="rounded-2xl overflow-hidden aspect-video bg-surface-card border border-border/80 shadow-2xl relative group">
