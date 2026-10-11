@@ -168,4 +168,17 @@ export const mediaAPI = {
     api.delete(`/media/${id}${force ? '?force=true' : ''}`),
 };
 
+export function resolveMediaUrl(url, type = 'image') {
+  if (!url || typeof url !== 'string') return url;
+  const match = url.trim().match(
+    /(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i
+  );
+  if (match && match[1]) {
+    return type === 'image'
+      ? `https://lh3.googleusercontent.com/d/${match[1]}`
+      : `https://drive.google.com/file/d/${match[1]}/preview`;
+  }
+  return url;
+}
+
 export default api;

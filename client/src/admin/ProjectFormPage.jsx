@@ -55,8 +55,8 @@ function MediaField({ label, field, accept, type = 'video', aspect = '16:9', val
             onChange={(e) => onChange(field, e.target.value)}
             placeholder={
               isVertical
-                ? 'Paste vertical YouTube Short, TikTok, Instagram Reel, or direct MP4 URL'
-                : (type === 'video' ? 'Paste YouTube, Vimeo, or direct MP4 URL' : 'Paste image URL (https://...)')
+                ? 'Paste vertical YouTube Short, Google Drive, or direct MP4 URL'
+                : (type === 'video' ? 'Paste Google Drive, YouTube, Vimeo, or direct MP4 URL' : 'Paste image URL or Google Drive link (https://...)')
             }
             className="admin-input pl-10 text-xs"
           />
@@ -111,7 +111,17 @@ function MediaField({ label, field, accept, type = 'video', aspect = '16:9', val
             isVertical ? 'w-48 sm:w-56 aspect-[9/16] mx-auto border-accent/40 ring-4 ring-black/30' : 'aspect-video max-w-sm'
           }`}>
             {type === 'image' ? (
-              <img src={value} alt="" className="w-full h-full object-cover" />
+              <img
+                src={
+                  value?.includes('drive.google.com')
+                    ? (value.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i)?.[1]
+                      ? `https://lh3.googleusercontent.com/d/${value.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i)[1]}`
+                      : value)
+                    : value
+                }
+                alt=""
+                className="w-full h-full object-cover"
+              />
             ) : (
               <div className="w-full h-full">
                 <VideoPlayer url={value} className="w-full h-full object-cover" />

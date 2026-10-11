@@ -271,7 +271,7 @@ export default function ShowreelPage() {
                         type="text"
                         value={showreel.video_url || ''}
                         onChange={(e) => handleChange(showreel.id, 'video_url', e.target.value)}
-                        placeholder="Paste YouTube, Vimeo, Cloudinary, or direct MP4 URL"
+                        placeholder="Paste Google Drive, YouTube, Vimeo, or direct MP4 URL"
                         className="admin-input pl-10"
                       />
                     </div>

@@ -41,6 +41,17 @@ export default function VideoPlayer({
       };
     }
 
+    // Google Drive regex matching /file/d/{id}, /open?id={id}, /uc?id={id}
+    const gDriveMatch = trimmed.match(
+      /(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i
+    );
+    if (gDriveMatch && gDriveMatch[1]) {
+      return {
+        type: 'googledrive',
+        embedUrl: `https://drive.google.com/file/d/${gDriveMatch[1]}/preview`,
+      };
+    }
+
     // Direct video stream / file URL
     return {
       type: 'direct',
@@ -48,11 +59,22 @@ export default function VideoPlayer({
     };
   }, [url, autoPlay, muted, loop]);
 
+  const resolvedPoster = useMemo(() => {
+    if (!poster || typeof poster !== 'string') return poster;
+    const match = poster.trim().match(
+      /(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i
+    );
+    if (match && match[1]) {
+      return `https://lh3.googleusercontent.com/d/${match[1]}`;
+    }
+    return poster;
+  }, [poster]);
+
   if (!url || !videoMeta || hasError) {
-    if (poster) {
+    if (resolvedPoster) {
       return (
         <img
-          src={poster}
+          src={resolvedPoster}
           alt={title}
           loading="lazy"
           className={className}
@@ -62,7 +84,7 @@ export default function VideoPlayer({
     return null;
   }
 
-  if (videoMeta.type === 'youtube' || videoMeta.type === 'vimeo') {
+  if (videoMeta.type === 'youtube' || videoMeta.type === 'vimeo' || videoMeta.type === 'googledrive') {
     return (
       <iframe
         src={videoMeta.embedUrl}
@@ -77,7 +99,7 @@ export default function VideoPlayer({
   return (
     <video
       src={videoMeta.src}
-      poster={poster}
+      poster={resolvedPoster}
       controls={controls}
       autoPlay={autoPlay}
       loop={loop}

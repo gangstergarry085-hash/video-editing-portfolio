@@ -3,7 +3,7 @@ import { useOutletContext, Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
 import {
   projectsAPI, showreelAPI, beforeAfterAPI,
-  servicesAPI, aboutAPI,
+  servicesAPI, aboutAPI, resolveMediaUrl,
 } from '../lib/api';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import TiltCard from '../components/TiltCard';
@@ -591,7 +591,7 @@ export default function HomePage() {
                       <div className="relative aspect-video overflow-hidden bg-surface-elevated">
                         {project.thumbnail_url ? (
                           <img
-                            src={project.thumbnail_url}
+                            src={resolveMediaUrl(project.thumbnail_url, 'image')}
                             alt={project.title}
                             loading="lazy"
                             decoding="async"
@@ -859,7 +859,7 @@ export default function HomePage() {
               <div className="relative rounded-2xl overflow-hidden glass-card p-2 border border-border shadow-2xl group">
                 <img
                   src={
-                    effectiveAbout?.profile_image_url ||
+                    resolveMediaUrl(effectiveAbout?.profile_image_url, 'image') ||
                     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80'
                   }
                   alt={effectiveAbout?.name || 'Dev Anand'}
