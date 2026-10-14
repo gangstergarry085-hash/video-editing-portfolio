@@ -7,6 +7,7 @@ import {
   HiOutlineLink, HiOutlineDownload, HiOutlineRefresh,
   HiOutlineDatabase,
 } from 'react-icons/hi';
+import { FaWhatsapp } from 'react-icons/fa6';
 
 const KNOWN_SOCIALS = [
   { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/username' },
@@ -47,6 +48,7 @@ export default function SettingsPage() {
         availabilityStatus: raw?.availability_status || raw?.availabilityStatus || 'Available for Projects',
         accentColor: raw?.accent_color || raw?.accentColor || '#E5A93C',
         email: raw?.email || 'admin@devanand.com',
+        whatsappNumber: raw?.whatsapp_number || raw?.whatsappNumber || '',
         socialLinks: typeof raw?.social_links === 'object' && raw?.social_links !== null ? raw.social_links : (typeof raw?.socialLinks === 'object' && raw?.socialLinks !== null ? raw.socialLinks : {}),
         footerText: raw?.footer_text || raw?.footerText || '© Dev Anand. All rights reserved.',
         metaTitle: raw?.meta_title || raw?.metaTitle || 'Dev Anand — Video Editor & Motion Designer',
@@ -210,6 +212,8 @@ export default function SettingsPage() {
         contactHeading: form.contactHeading,
         contact_subheading: form.contactSubheading,
         contactSubheading: form.contactSubheading,
+        whatsapp_number: form.whatsappNumber || '',
+        whatsappNumber: form.whatsappNumber || '',
         process_steps: form.processSteps,
         processSteps: form.processSteps,
       };
@@ -421,14 +425,28 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="admin-label">Footer Copyright Notice</label>
+                <label className="admin-label flex items-center gap-1.5">
+                  <FaWhatsapp className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>WhatsApp Contact Number</span>
+                </label>
                 <input
                   type="text"
-                  value={form.footerText}
-                  onChange={(e) => handleChange('footerText', e.target.value)}
+                  value={form.whatsappNumber || ''}
+                  onChange={(e) => handleChange('whatsappNumber', e.target.value)}
+                  placeholder="+919876543210 (with country code)"
                   className="admin-input"
                 />
+                <p className="text-[11px] text-text-muted mt-1">Used for all direct WhatsApp CTAs and quick message buttons across the portfolio.</p>
               </div>
+            </div>
+            <div>
+              <label className="admin-label">Footer Copyright Notice</label>
+              <input
+                type="text"
+                value={form.footerText}
+                onChange={(e) => handleChange('footerText', e.target.value)}
+                className="admin-input"
+              />
             </div>
 
             {/* Social channels inputs */}

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { projectsAPI } from '../lib/api';
-import { FALLBACK_SHOWCASE_PROJECTS } from '../lib/showcaseData';
 import VideoPlayer from '../components/VideoPlayer';
 import {
   HiOutlineArrowLeft,
@@ -26,22 +25,15 @@ export default function ProjectDetailPage() {
       .getBySlug(slug)
       .then(({ data }) => {
         const item = data?.project || data;
-        const matched = item || FALLBACK_SHOWCASE_PROJECTS.find((p) => p.slug === slug);
-        setProject(matched || null);
-        if (matched?.mobile_video_url && !matched?.video_url) {
+        setProject(item || null);
+        if (item?.mobile_video_url && !item?.video_url) {
           setActiveCut('vertical');
         } else {
           setActiveCut('landscape');
         }
       })
       .catch(() => {
-        const fallback = FALLBACK_SHOWCASE_PROJECTS.find((p) => p.slug === slug);
-        setProject(fallback || null);
-        if (fallback?.mobile_video_url && !fallback?.video_url) {
-          setActiveCut('vertical');
-        } else {
-          setActiveCut('landscape');
-        }
+        setProject(null);
       })
       .finally(() => {
         setLoading(false);
@@ -90,10 +82,15 @@ export default function ProjectDetailPage() {
         return match ? `https://drive.google.com/file/d/${match[1]}/view` : currentVideoUrl;
       })()
     : null;
-  const whatsappNumber = (settings?.phone || '919876543210').replace(/[^0-9]/g, '');
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-    `Hi Dev, I saw your "${project.title}" project on your portfolio and I'd like to discuss a video editing project with you.`
-  )}`;
+  const rawWa = settings?.whatsapp_number || settings?.whatsappNumber || settings?.phone || '';
+  const whatsappDigits = rawWa.replace(/\D/g, '');
+  const whatsappUrl = whatsappDigits
+    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
+        `Hi Dev, I saw your "${project.title}" project on your portfolio and I'd like to discuss a video editing project with you.`
+      )}`
+    : `https://wa.me/?text=${encodeURIComponent(
+        `Hi Dev, I saw your "${project.title}" project on your portfolio and I'd like to discuss a video editing project with you.`
+      )}`;
 
   return (
     <div className="min-h-screen pt-28 pb-24 px-6 relative overflow-hidden">

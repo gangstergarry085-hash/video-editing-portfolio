@@ -5,13 +5,11 @@ import {
   projectsAPI, showreelAPI, beforeAfterAPI,
   servicesAPI, aboutAPI, resolveMediaUrl,
 } from '../lib/api';
-import { SHOWCASE_CATEGORIES, FALLBACK_SHOWCASE_PROJECTS, normalizeCategory } from '../lib/showcaseData';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
 import TiltCard from '../components/TiltCard';
 import AudioVisualizer from '../components/AudioVisualizer';
 import FilmStripTicker from '../components/FilmStripTicker';
 import VideoPlayer from '../components/VideoPlayer';
-import VerticalReelCard from '../components/VerticalReelCard';
 import { getSocialIcon, getSocialBrandColor } from '../components/SocialIcons';
 import {
   HiPlay,
@@ -132,7 +130,7 @@ export default function HomePage() {
       return null;
     }
   });
-  const [activeCategory, setActiveCategory] = useState('Client & Case Stories');
+  const [activeCategory, setActiveCategory] = useState('All');
 
   const effectiveAbout = context.about || about;
   const combinedSocialLinks = {
@@ -196,41 +194,28 @@ export default function HomePage() {
     });
   }, []);
 
-  // Combine API/DB projects with FALLBACK_SHOWCASE_PROJECTS so all 3 categories are always fully populated
-  const combinedProjects = useMemo(() => {
-    // If user has database projects, map their categories to the 3 standard tabs
-    const dbMapped = allProjects.map((p) => ({
-      ...p,
-      category: normalizeCategory(p.category),
-    }));
-
-    // For each of the 3 primary tabs, if no DB projects exist for it, populate with fallback showcase projects
-    const result = [...dbMapped];
-    SHOWCASE_CATEGORIES.forEach((cat) => {
-      const hasCategoryInDb = dbMapped.some((p) => p.category === cat);
-      if (!hasCategoryInDb) {
-        const catFallbacks = FALLBACK_SHOWCASE_PROJECTS.filter((p) => p.category === cat);
-        result.push(...catFallbacks);
+  // Dynamic categories extracted from real projects in the database
+  const categories = useMemo(() => {
+    const set = new Set();
+    allProjects.forEach((p) => {
+      if (p.category && typeof p.category === 'string') {
+        const trimmed = p.category.trim();
+        if (trimmed) set.add(trimmed);
       }
     });
-
-    // Always ensure Star Excellent Academy is present in Tab 1 ("Client & Case Stories")
-    const hasStarAcademy = result.some((p) => p.slug === 'star-excellent-academy');
-    if (!hasStarAcademy) {
-      const starAcademy = FALLBACK_SHOWCASE_PROJECTS.find((p) => p.slug === 'star-excellent-academy');
-      if (starAcademy) {
-        result.unshift(starAcademy);
-      }
-    }
-
-    return result;
+    return ['All', ...Array.from(set)];
   }, [allProjects]);
 
-  const filteredProjects = combinedProjects.filter((p) => p.category === activeCategory);
+  const filteredProjects = useMemo(() => {
+    if (activeCategory === 'All') return allProjects;
+    return allProjects.filter((p) => (p.category || '').toLowerCase() === activeCategory.toLowerCase());
+  }, [allProjects, activeCategory]);
 
-  const whatsappUrl = settings?.whatsapp_number
-    ? `https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}?text=Hi%20Dev,%20saw%20your%20portfolio`
-    : 'https://wa.me/91YOUR_PHONE_NUMBER?text=Hi%20Dev,%20saw%20your%20portfolio';
+  const rawWa = settings?.whatsapp_number || settings?.whatsappNumber || settings?.phone || '';
+  const whatsappDigits = rawWa.replace(/\D/g, '');
+  const whatsappUrl = whatsappDigits
+    ? `https://wa.me/${whatsappDigits}?text=Hi%20Dev,%20saw%20your%20portfolio`
+    : 'https://wa.me/?text=Hi%20Dev,%20saw%20your%20portfolio';
 
   // Scroll parallax for Hero
   const { scrollYProgress } = useScroll();
@@ -472,79 +457,162 @@ export default function HomePage() {
         </motion.div>
       </Section>
 
-      {/* ── CATEGORIZED VIDEO SHOWCASE (3-TAB FILTER SYSTEM) ───────── */}
+      {/* ── SELECTED WORK / PORTFOLIO ─────────────────── */}
       <Section id="work" className="bg-surface-elevated/20">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-12 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <SectionTitle
-            label="CATEGORIZED VIDEO SHOWCASE"
-            title="Master Timeline & Selected Works"
-            subtitle="Curated showcases in mobile-first 9:16 vertical video players with instant poster thumbnails and zero-lag playback."
+            label="SELECTED WORKS"
+            title="Featured Cuts & Projects"
+            subtitle="Curated collection of high-retention commercial cuts, client case stories, documentaries, and social reels."
           />
 
-          {/* Clean 3-Tab Filter Switcher */}
-          <motion.div
-            variants={fadeUp}
-            className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl glass border border-border/80 self-start lg:self-end shadow-lg"
-          >
-            {SHOWCASE_CATEGORIES.map((tab) => {
-              const count = combinedProjects.filter((p) => p.category === tab).length;
-              const isActive = activeCategory === tab;
-              return (
+          {/* Dynamic Category Filter Pills */}
+          {categories.length > 1 && (
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-2">
+              {categories.map((cat) => (
                 <button
-                  key={tab}
+                  key={cat}
                   type="button"
-                  onClick={() => setActiveCategory(tab)}
-                  className={`relative px-4 py-2.5 rounded-xl text-xs font-mono tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-2 select-none ${
-                    isActive
-                      ? 'bg-accent text-surface font-bold shadow-lg shadow-accent/25'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-4 py-2 rounded-full text-xs font-mono tracking-wider transition-all duration-300 cursor-pointer ${
+                    activeCategory === cat
+                      ? 'bg-accent text-surface font-bold shadow-lg shadow-accent/20'
+                      : 'glass text-text-secondary hover:text-text-primary hover:border-accent/30'
                   }`}
                 >
-                  <span>{tab}</span>
-                  <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold ${
-                      isActive
-                        ? 'bg-surface/20 text-surface'
-                        : 'bg-surface-elevated text-text-muted border border-border/60'
-                    }`}
-                  >
-                    0{count}
-                  </span>
+                  {cat}
                 </button>
-              );
-            })}
-          </motion.div>
+              ))}
+            </motion.div>
+          )}
         </div>
 
-        {/* 9:16 Vertical Video Players Grid */}
+        {/* Projects Grid */}
         {filteredProjects.length === 0 ? (
           <div className="py-20 px-6 rounded-3xl glass-card border border-border/70 text-center flex flex-col items-center justify-center">
             <div className="w-16 h-16 rounded-full bg-surface-elevated border border-border flex items-center justify-center mb-4 text-text-muted">
               <HiOutlineFilm className="w-8 h-8 text-accent" />
             </div>
             <h3 className="text-xl font-display font-bold text-text-primary tracking-tight">
-              REELS IN POST-PRODUCTION
+              {allProjects.length === 0 ? 'PROJECTS IN POST-PRODUCTION' : 'NO PROJECTS FOUND'}
             </h3>
             <p className="text-text-muted text-sm mt-2 max-w-md">
-              Selected cuts for this style are currently undergoing studio mastering.
+              {allProjects.length === 0
+                ? 'Recent cuts and client projects are currently in post-production. Selected works will premiere here soon.'
+                : 'No projects match this category. Select another genre or view all works.'}
             </p>
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-mono font-medium tracking-wider border border-border hover:border-accent/50 text-text-secondary hover:text-text-primary transition-all glass hover:bg-surface-elevated cursor-pointer"
+            >
+              <span>INQUIRE FOR PRIVATE REELS</span>
+              <HiOutlineArrowRight className="w-3.5 h-3.5 text-accent" />
+            </a>
           </div>
         ) : (
-          <motion.div
-            variants={stagger}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
-          >
+          <motion.div variants={stagger} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             <AnimatePresence mode="popLayout">
               {filteredProjects.map((project) => (
                 <motion.div
                   key={project.id || project.slug}
                   layout
-                  initial={{ opacity: 0, scale: 0.96 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ duration: 0.28 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <VerticalReelCard project={project} />
+                  <TiltCard className="group h-full">
+                    <Link
+                      to={`/project/${project.slug}`}
+                      className="flex flex-col h-full bg-surface-card rounded-2xl overflow-hidden border border-border/80 hover:border-accent/40 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-accent/5 group"
+                    >
+                      {/* Thumbnail Viewport */}
+                      <div className="relative aspect-video bg-neutral-950 overflow-hidden">
+                        {project.thumbnail_url ? (
+                          <img
+                            src={resolveMediaUrl(project.thumbnail_url, 'image')}
+                            alt={project.title}
+                            loading="lazy"
+                            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-surface via-surface-card to-surface-elevated">
+                            <HiOutlineFilm className="w-12 h-12 text-text-muted/40" />
+                          </div>
+                        )}
+
+                        {/* Hover Overlay with Play Icon */}
+                        <div className="absolute inset-0 bg-neutral-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                          <div className="w-14 h-14 rounded-full bg-accent text-surface flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-xl shadow-accent/30">
+                            <HiPlay className="w-6 h-6 ml-0.5" />
+                          </div>
+                        </div>
+
+                        {/* Category Badge & Duration */}
+                        <div className="absolute top-3 left-3 flex items-center gap-2">
+                          {project.category && (
+                            <span className="text-[11px] font-mono font-semibold uppercase tracking-wider bg-surface/90 backdrop-blur-md text-text-primary px-2.5 py-1 rounded-md border border-white/10 shadow-sm">
+                              {project.category}
+                            </span>
+                          )}
+                          {project.featured && (
+                            <span className="text-[10px] font-mono uppercase tracking-wider bg-accent text-surface font-bold px-2 py-0.5 rounded shadow-sm">
+                              FEATURED
+                            </span>
+                          )}
+                        </div>
+
+                        {project.duration && (
+                          <div className="absolute bottom-3 right-3 font-mono text-[11px] bg-neutral-950/85 backdrop-blur-md text-white/90 px-2 py-0.5 rounded border border-white/10">
+                            {project.duration}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content Body */}
+                      <div className="p-6 flex-1 flex flex-col justify-between">
+                        <div>
+                          {project.client_name && (
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                              <span className="text-xs font-mono text-accent uppercase tracking-wider font-semibold">
+                                {project.client_name}
+                              </span>
+                            </div>
+                          )}
+                          <h3 className="text-xl font-display font-bold text-text-primary group-hover:text-accent transition-colors tracking-tight line-clamp-1">
+                            {project.title}
+                          </h3>
+                          {(project.short_description || project.description) && (
+                            <p className="text-sm text-text-secondary mt-2 line-clamp-2 leading-relaxed font-sans">
+                              {project.short_description || project.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Tool Tags and View Action */}
+                        <div className="flex items-center justify-between mt-5 pt-4 border-t border-border/60">
+                          <div className="flex flex-wrap gap-1.5">
+                            {(project.tools || []).slice(0, 3).map((tool) => (
+                              <span
+                                key={tool}
+                                className="text-[10px] font-mono text-text-secondary bg-surface-elevated px-2 py-0.5 rounded border border-border/50"
+                              >
+                                {tool}
+                              </span>
+                            ))}
+                          </div>
+
+                          <span className="inline-flex items-center gap-1 text-xs font-mono font-medium text-accent opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all">
+                            <span>VIEW CASE</span>
+                            <HiOutlineArrowRight className="w-3.5 h-3.5" />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </TiltCard>
                 </motion.div>
               ))}
             </AnimatePresence>

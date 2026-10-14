@@ -34,9 +34,14 @@ const settingsSchema = Joi.object({
   contact_heading: Joi.string().allow('', null),
   contactSubheading: Joi.string().allow('', null),
   contact_subheading: Joi.string().allow('', null),
+  whatsappNumber: Joi.string().max(50).allow('', null),
+  whatsapp_number: Joi.string().max(50).allow('', null),
   processSteps: Joi.array(),
   process_steps: Joi.array(),
 }).unknown(true);
+
+// Ensure column exists gracefully in DB
+pool.query("ALTER TABLE settings ADD COLUMN IF NOT EXISTS whatsapp_number VARCHAR(50) DEFAULT ''").catch(() => {});
 
 // GET /api/settings — public
 router.get('/', async (req, res, next) => {
@@ -68,6 +73,7 @@ router.put('/', requireAuth, validate(settingsSchema), async (req, res, next) =>
     const ogImageUrl = data.ogImageUrl ?? data.og_image_url ?? existing.og_image_url ?? null;
     const contactHeading = data.contactHeading ?? data.contact_heading ?? existing.contact_heading ?? 'Ready to Cut Your Next Masterpiece?';
     const contactSubheading = data.contactSubheading ?? data.contact_subheading ?? existing.contact_subheading ?? "Whether you need a dynamic commercial campaign, a high-converting short-form reel, or a nuanced color grade — let's collaborate.";
+    const whatsappNumber = data.whatsappNumber ?? data.whatsapp_number ?? existing.whatsapp_number ?? '';
 
     let socialLinks;
     if (data.socialLinks !== undefined || data.social_links !== undefined) {
@@ -100,8 +106,9 @@ router.put('/', requireAuth, validate(settingsSchema), async (req, res, next) =>
           email = $7, social_links = $8, footer_text = $9,
           meta_title = $10, meta_description = $11, og_image_url = $12,
           process_steps = $13, contact_heading = $14, contact_subheading = $15,
+          whatsapp_number = $16,
           updated_at = NOW()
-        WHERE id = $16 RETURNING *
+        WHERE id = $17 RETURNING *
       `, [
         siteTitle, heroHeading, heroSubheading,
         heroStatement, availabilityStatus, accentColor,
@@ -110,6 +117,7 @@ router.put('/', requireAuth, validate(settingsSchema), async (req, res, next) =>
         processSteps,
         contactHeading,
         contactSubheading,
+        whatsappNumber,
         existing.id,
       ]);
     } else {
@@ -118,8 +126,8 @@ router.put('/', requireAuth, validate(settingsSchema), async (req, res, next) =>
           site_title, hero_heading, hero_subheading, hero_statement,
           availability_status, accent_color, email, social_links,
           footer_text, meta_title, meta_description, og_image_url,
-          process_steps, contact_heading, contact_subheading
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *
+          process_steps, contact_heading, contact_subheading, whatsapp_number
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *
       `, [
         siteTitle, heroHeading, heroSubheading,
         heroStatement, availabilityStatus, accentColor,
@@ -128,6 +136,7 @@ router.put('/', requireAuth, validate(settingsSchema), async (req, res, next) =>
         processSteps,
         contactHeading,
         contactSubheading,
+        whatsappNumber,
       ]);
     }
 
