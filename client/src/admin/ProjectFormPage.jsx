@@ -9,13 +9,14 @@ import {
 } from 'react-icons/hi';
 
 const CATEGORIES = [
+  'Client & Case Stories', 'High-Retention Reels', 'Commercial & Promos',
   'Cinematic', 'Motion Graphics', 'Social Media',
   'YouTube', 'Advertisement', 'Client Work', 'Personal Experiment',
 ];
 
 const emptyForm = {
   title: '',
-  category: 'Cinematic',
+  category: 'Client & Case Stories',
   description: '',
   shortDescription: '',
   videoUrl: '',

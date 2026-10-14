@@ -479,64 +479,6 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Process Steps */}
-        <section className="admin-card space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Editing Process Steps</h2>
-            <button
-              type="button"
-              onClick={addStep}
-              className="admin-btn-secondary text-xs"
-            >
-              <HiOutlinePlus className="w-3.5 h-3.5" />
-              Add Step
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {form.processSteps.map((step, i) => (
-              <div key={i} className="p-3.5 rounded-xl bg-surface border border-border/70 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono text-accent font-semibold">
-                    STEP {step.step || i + 1} // NODE {step.node || `0${i + 1}`}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => removeStep(i)}
-                    className="p-1 hover:bg-danger/10 text-text-muted hover:text-danger rounded"
-                    title="Remove step"
-                  >
-                    <HiOutlineTrash className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    value={step.title || ''}
-                    onChange={(e) => updateStep(i, 'title', e.target.value)}
-                    placeholder="Step Title (e.g. Ingestion & Proxies)"
-                    className="admin-input text-xs"
-                  />
-                  <input
-                    type="text"
-                    value={step.track || ''}
-                    onChange={(e) => updateStep(i, 'track', e.target.value)}
-                    placeholder="Timeline Track (e.g. V1-V4 / A1-A6)"
-                    className="admin-input text-xs"
-                  />
-                </div>
-                <textarea
-                  value={step.description || ''}
-                  onChange={(e) => updateStep(i, 'description', e.target.value)}
-                  rows={2}
-                  placeholder="Detailed description of this production phase..."
-                  className="admin-input text-xs resize-y"
-                />
-              </div>
-            ))}
-          </div>
-        </section>
-
         <button
           type="submit"
           disabled={saving}

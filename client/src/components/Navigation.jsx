@@ -6,7 +6,6 @@ const navLinks = [
   { label: 'Showreel', href: '#showreel' },
   { label: 'Work', href: '#work' },
   { label: 'Color Grade', href: '#before-after' },
-  { label: 'Process', href: '#process' },
   { label: 'Services', href: '#services' },
   { label: 'About', href: '#about' },
   { label: 'Contact', href: '#contact' },

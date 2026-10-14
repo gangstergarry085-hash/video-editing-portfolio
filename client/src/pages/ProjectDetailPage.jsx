@@ -1,26 +1,21 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { projectsAPI } from '../lib/api';
+import { FALLBACK_SHOWCASE_PROJECTS } from '../lib/showcaseData';
 import VideoPlayer from '../components/VideoPlayer';
 import {
   HiOutlineArrowLeft,
-  HiOutlineAdjustmentsHorizontal,
   HiPlay,
+  HiOutlineArrowRight,
   HiOutlineArrowTopRightOnSquare,
 } from 'react-icons/hi2';
-
-const COLORIST_NODES = [
-  { node: '01', name: 'Input CST', desc: 'Camera Sensor Log to DaVinci Wide Gamut Intermediate' },
-  { node: '02', name: 'Exposure & Balance', desc: 'Photometric exposure offset & neutral grey balance' },
-  { node: '03', name: 'Contrast Curve', desc: 'S-curve roll-off preserving highlight details' },
-  { node: '04', name: 'Skin Tone Qualifier', desc: 'Vectorscope isolation along skin tone indicator line' },
-  { node: '05', name: 'Look Development', desc: 'Hollywood 35mm print stock emulation & split toning' },
-  { node: '06', name: 'Output Transform', desc: 'Rec.709 Gamma 2.4 delivery master conversion' },
-];
+import { FaWhatsapp } from 'react-icons/fa6';
 
 export default function ProjectDetailPage() {
   const { slug } = useParams();
+  const context = useOutletContext() || {};
+  const settings = context.settings;
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeCut, setActiveCut] = useState('landscape'); // 'landscape' or 'vertical'
@@ -31,15 +26,22 @@ export default function ProjectDetailPage() {
       .getBySlug(slug)
       .then(({ data }) => {
         const item = data?.project || data;
-        setProject(item || null);
-        if (item?.mobile_video_url && !item?.video_url) {
+        const matched = item || FALLBACK_SHOWCASE_PROJECTS.find((p) => p.slug === slug);
+        setProject(matched || null);
+        if (matched?.mobile_video_url && !matched?.video_url) {
           setActiveCut('vertical');
         } else {
           setActiveCut('landscape');
         }
       })
       .catch(() => {
-        setProject(null);
+        const fallback = FALLBACK_SHOWCASE_PROJECTS.find((p) => p.slug === slug);
+        setProject(fallback || null);
+        if (fallback?.mobile_video_url && !fallback?.video_url) {
+          setActiveCut('vertical');
+        } else {
+          setActiveCut('landscape');
+        }
       })
       .finally(() => {
         setLoading(false);
@@ -88,6 +90,10 @@ export default function ProjectDetailPage() {
         return match ? `https://drive.google.com/file/d/${match[1]}/view` : currentVideoUrl;
       })()
     : null;
+  const whatsappNumber = (settings?.phone || '919876543210').replace(/[^0-9]/g, '');
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+    `Hi Dev, I saw your "${project.title}" project on your portfolio and I'd like to discuss a video editing project with you.`
+  )}`;
 
   return (
     <div className="min-h-screen pt-28 pb-24 px-6 relative overflow-hidden">
@@ -264,91 +270,53 @@ export default function ProjectDetailPage() {
           )}
         </motion.div>
 
-        {/* Technical Specs Strip */}
-        <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3.5 rounded-xl bg-surface-card border border-border/70">
-            <span className="block text-[10px] font-mono text-text-muted uppercase tracking-wider">
-              TIMELINE RESOLUTION
-            </span>
-            <span className="text-xs font-mono font-bold text-text-primary mt-1 block">
-              {isVerticalActive ? '1080 × 1920 Vertical HD' : '4096 × 2160 DCI'}
-            </span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-surface-card border border-border/70">
-            <span className="block text-[10px] font-mono text-text-muted uppercase tracking-wider">
-              COLOR PIPELINE
-            </span>
-            <span className="text-xs font-mono font-bold text-accent mt-1 block">
-              DaVinci YRGB Managed
-            </span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-surface-card border border-border/70">
-            <span className="block text-[10px] font-mono text-text-muted uppercase tracking-wider">
-              ASPECT RATIO
-            </span>
-            <span className="text-xs font-mono font-bold text-text-primary mt-1 block">
-              {isVerticalActive ? '9:16 Mobile Portrait' : '16:9 / 2.39:1 Cinema'}
-            </span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-surface-card border border-border/70">
-            <span className="block text-[10px] font-mono text-text-muted uppercase tracking-wider">
-              AUDIO MASTER
-            </span>
-            <span className="text-xs font-mono font-bold text-text-primary mt-1 block">
-              48kHz 24-Bit Stereo
-            </span>
-          </div>
-        </div>
-
-        {/* Narrative & Specifications Grid */}
+        {/* Narrative & Case Info Grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-10"
+          className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-10"
         >
           <div className="md:col-span-2 space-y-8">
             <div>
               <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full glass-light border border-border text-[10px] font-mono text-accent mb-3 uppercase tracking-wider">
                 EDITORIAL OVERVIEW
               </div>
-              <p className="text-text-secondary leading-relaxed text-lg font-sans">
+              <p className="text-text-secondary leading-relaxed text-base sm:text-lg font-sans">
                 {project.description}
               </p>
             </div>
 
-            {/* DaVinci Colorist Node Breakdown */}
-            <div className="pt-6 border-t border-border/70">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <HiOutlineAdjustmentsHorizontal className="w-4 h-4 text-accent" />
-                  <h3 className="font-display font-bold text-sm uppercase tracking-wider text-text-primary">
-                    DaVinci Resolve Color Grade Node-Tree
-                  </h3>
-                </div>
-                <span className="text-[10px] font-mono text-text-muted">6-NODE PIPELINE</span>
+            {project.client_description && (
+              <div className="p-5 rounded-2xl bg-surface-card border border-border/70">
+                <span className="block text-[10px] font-mono text-text-muted uppercase tracking-wider mb-2">
+                  CLIENT &amp; CREATIVE GOAL
+                </span>
+                <p className="text-text-secondary text-sm font-sans leading-relaxed">
+                  {project.client_description}
+                </p>
               </div>
+            )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {COLORIST_NODES.map((node) => (
-                  <div
-                    key={node.node}
-                    className="p-3 rounded-xl bg-surface-card border border-border/60 hover:border-accent/40 transition-colors flex items-start gap-3"
-                  >
-                    <span className="w-6 h-6 rounded bg-accent/10 border border-accent/30 text-accent font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
-                      {node.node}
-                    </span>
-                    <div>
-                      <span className="block text-xs font-bold text-text-primary font-display">
-                        {node.name}
-                      </span>
-                      <span className="block text-[11px] text-text-secondary font-sans mt-0.5 leading-snug">
-                        {node.desc}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+            {/* Direct Client Action CTA */}
+            <div className="p-6 rounded-2xl glass-card border border-accent/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <h4 className="font-display font-bold text-base text-text-primary">
+                  Interested in a video or reel like this?
+                </h4>
+                <p className="text-text-muted text-xs font-sans mt-0.5">
+                  Let's discuss creative ideas, turnaround times, and pricing.
+                </p>
               </div>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-[#25D366] via-[#20BD5A] to-[#128C7E] text-white font-display font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all shrink-0"
+              >
+                <FaWhatsapp className="w-4 h-4 text-white" />
+                <span>Chat on WhatsApp</span>
+              </a>
             </div>
           </div>
 
