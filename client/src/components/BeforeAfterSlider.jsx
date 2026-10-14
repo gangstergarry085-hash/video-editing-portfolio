@@ -1,5 +1,6 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useMemo } from 'react';
 import { HiArrowsRightLeft } from 'react-icons/hi2';
+import { resolveMediaUrl } from '../lib/api';
 
 export default function BeforeAfterSlider({
   rawMedia,
@@ -26,6 +27,9 @@ export default function BeforeAfterSlider({
 
   const isVideoRaw = rawMedia && Boolean(rawMedia.match(/\.(mp4|webm|mov|ogg)/i));
   const isVideoFinal = finalMedia && Boolean(finalMedia.match(/\.(mp4|webm|mov|ogg)/i));
+
+  const resolvedRaw = useMemo(() => resolveMediaUrl(rawMedia, isVideoRaw ? 'video' : 'image'), [rawMedia, isVideoRaw]);
+  const resolvedFinal = useMemo(() => resolveMediaUrl(finalMedia, isVideoFinal ? 'video' : 'image'), [finalMedia, isVideoFinal]);
 
   // Direct 0ms hardware update without CSS variable inheritance overhead
   const applyPosition = useCallback((pos) => {
@@ -176,11 +180,11 @@ export default function BeforeAfterSlider({
       >
         {/* Base Layer: Final Graded Cut */}
         <div className="absolute inset-0 w-full h-full pointer-events-none">
-          {finalMedia ? (
+          {resolvedFinal ? (
             isVideoFinal ? (
               <video
                 ref={finalVideoRef}
-                src={finalMedia}
+                src={resolvedFinal}
                 autoPlay
                 muted
                 loop
@@ -191,7 +195,7 @@ export default function BeforeAfterSlider({
               />
             ) : (
               <img
-                src={finalMedia}
+                src={resolvedFinal}
                 alt="Final graded cut"
                 draggable={false}
                 onDragStart={(e) => e.preventDefault()}
@@ -233,11 +237,11 @@ export default function BeforeAfterSlider({
             WebkitClipPath: 'inset(0 50% 0 0)',
           }}
         >
-          {rawMedia ? (
+          {resolvedRaw ? (
             isVideoRaw ? (
               <video
                 ref={rawVideoRef}
-                src={rawMedia}
+                src={resolvedRaw}
                 autoPlay
                 muted
                 loop
@@ -249,7 +253,7 @@ export default function BeforeAfterSlider({
               />
             ) : (
               <img
-                src={rawMedia}
+                src={resolvedRaw}
                 alt="Raw log footage"
                 draggable={false}
                 onDragStart={(e) => e.preventDefault()}

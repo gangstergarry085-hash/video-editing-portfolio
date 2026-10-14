@@ -170,15 +170,39 @@ export const mediaAPI = {
 
 export function resolveMediaUrl(url, type = 'image') {
   if (!url || typeof url !== 'string') return url;
-  const match = url.trim().match(
+  const trimmed = url.trim();
+
+  // 1. Convert GitHub repo URLs (blob or raw) to fast jsDelivr CDN
+  // e.g. https://github.com/user/repo/blob/main/media/thumb.jpg -> https://cdn.jsdelivr.net/gh/user/repo@main/media/thumb.jpg
+  const ghBlobMatch = trimmed.match(
+    /^https?:\/\/(?:www\.)?github\.com\/([^/]+)\/([^/]+)\/(?:blob|raw)\/([^/]+)\/(.+)$/i
+  );
+  if (ghBlobMatch) {
+    const [, owner, repo, branch, path] = ghBlobMatch;
+    return `https://cdn.jsdelivr.net/gh/${owner}/${repo}@${branch}/${path}`;
+  }
+
+  // 2. Convert raw.githubusercontent.com URLs to jsDelivr CDN
+  // e.g. https://raw.githubusercontent.com/user/repo/main/media/thumb.jpg -> https://cdn.jsdelivr.net/gh/user/repo@main/media/thumb.jpg
+  const ghRawMatch = trimmed.match(
+    /^https?:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/i
+  );
+  if (ghRawMatch) {
+    const [, owner, repo, branch, path] = ghRawMatch;
+    return `https://cdn.jsdelivr.net/gh/${owner}/${repo}@${branch}/${path}`;
+  }
+
+  // 3. Convert Google Drive URLs
+  const gDriveMatch = trimmed.match(
     /(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i
   );
-  if (match && match[1]) {
+  if (gDriveMatch && gDriveMatch[1]) {
     return type === 'image'
-      ? `https://lh3.googleusercontent.com/d/${match[1]}`
-      : `https://drive.google.com/file/d/${match[1]}/preview`;
+      ? `https://lh3.googleusercontent.com/d/${gDriveMatch[1]}`
+      : `https://drive.google.com/file/d/${gDriveMatch[1]}/preview`;
   }
-  return url;
+
+  return trimmed;
 }
 
 export default api;

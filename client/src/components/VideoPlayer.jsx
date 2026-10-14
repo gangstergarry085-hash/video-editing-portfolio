@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { resolveMediaUrl } from '../lib/api';
 
 /**
  * Universal Video Player Component
@@ -58,22 +59,16 @@ export default function VideoPlayer({
       };
     }
 
-    // Direct video stream / file URL
+    // Direct video stream / file URL (auto-resolving GitHub to jsDelivr if applicable)
     return {
       type: 'direct',
-      src: trimmed,
+      src: resolveMediaUrl(trimmed, 'video'),
     };
   }, [url, autoPlay, muted, loop]);
 
   const resolvedPoster = useMemo(() => {
     if (poster && typeof poster === 'string') {
-      const match = poster.trim().match(
-        /(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i
-      );
-      if (match && match[1]) {
-        return `https://lh3.googleusercontent.com/d/${match[1]}`;
-      }
-      return poster;
+      return resolveMediaUrl(poster, 'image');
     }
     // Auto-generate clean high-res poster from Google Drive video if no poster set
     if (videoMeta?.type === 'googledrive' && videoMeta?.fileId) {

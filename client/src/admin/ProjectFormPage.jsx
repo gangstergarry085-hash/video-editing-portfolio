@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { projectsAPI, mediaAPI } from '../lib/api';
+import { projectsAPI, mediaAPI, resolveMediaUrl } from '../lib/api';
 import toast from 'react-hot-toast';
 import VideoPlayer from '../components/VideoPlayer';
 import {
@@ -56,8 +56,8 @@ function MediaField({ label, field, accept, type = 'video', aspect = '16:9', val
             onChange={(e) => onChange(field, e.target.value)}
             placeholder={
               isVertical
-                ? 'Paste vertical YouTube Short, Google Drive, or direct MP4 URL'
-                : (type === 'video' ? 'Paste Google Drive, YouTube, Vimeo, or direct MP4 URL' : 'Paste image URL or Google Drive link (https://...)')
+                ? 'Paste vertical YouTube Short, Google Drive, GitHub CDN, or direct MP4 URL'
+                : (type === 'video' ? 'Paste Google Drive, YouTube, Vimeo, GitHub CDN, or direct MP4 URL' : 'Paste image URL, GitHub raw/blob, or Google Drive link (https://...)')
             }
             className="admin-input pl-10 text-xs"
           />
@@ -113,13 +113,7 @@ function MediaField({ label, field, accept, type = 'video', aspect = '16:9', val
           }`}>
             {type === 'image' ? (
               <img
-                src={
-                  value?.includes('drive.google.com')
-                    ? (value.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i)?.[1]
-                      ? `https://lh3.googleusercontent.com/d/${value.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]+)/i)[1]}`
-                      : value)
-                    : value
-                }
+                src={resolveMediaUrl(value, 'image')}
                 alt=""
                 className="w-full h-full object-cover"
               />
